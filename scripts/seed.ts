@@ -1,7 +1,5 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
 import { uuidv7 } from 'uuidv7';
-import { Env } from '@/libs/Env';
+import { db } from '@/libs/DB';
 import {
   clubs,
   club_memberships,
@@ -9,9 +7,6 @@ import {
   tournaments,
   users,
 } from '@/models/Schema';
-
-const client = postgres(Env.DATABASE_URL, { max: 1 });
-const db = drizzle(client);
 
 async function main() {
   console.log('Seeding…');
@@ -66,13 +61,11 @@ async function main() {
     });
   });
 
-  await client.end();
   console.log('Seed complete: 1 club, 4 players, 1 tournament');
   process.exit(0);
 }
 
-main().catch(async (e) => {
+main().catch((e) => {
   console.error(e);
-  await client.end();
   process.exit(1);
 });
