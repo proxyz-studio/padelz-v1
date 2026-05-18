@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, boolean, integer, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable, boolean, index, integer, jsonb, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 
 // ── Enums (M1) ────────────────────────────────────────────────────────────────
 
@@ -59,4 +59,57 @@ export const tier_history = pgTable('tier_history', {
   reason: tier_change_reason_enum('reason').notNull(),
 });
 
-// ── Tasks 1.5 and 1.6 will append tournament + match + scoring tables below ──
+// ── Enums (M2) ────────────────────────────────────────────────────────────────
+
+export const tournament_format_enum = pgEnum('tournament_format', ['americano', 'mexicano', 'round_robin', 'bracket']);
+export const tournament_type_enum = pgEnum('tournament_type', ['open', 'club_internal', 'group', 'casual']);
+export const tournament_status_enum = pgEnum('tournament_status', ['draft', 'open', 'in_progress', 'complete']);
+export const registration_status_enum = pgEnum('registration_status', ['registered', 'waitlist', 'withdrawn']);
+export const match_status_enum = pgEnum('match_status', ['scheduled', 'in_progress', 'complete', 'void']);
+
+// ── Tournament tables (M2) ────────────────────────────────────────────────────
+
+export const tournaments = pgTable('tournaments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: text('slug').notNull().unique(),
+  club_id: uuid('club_id').notNull().references(() => clubs.id, { onDelete: 'restrict' }),
+  name: text('name').notNull(),
+  format: tournament_format_enum('format').notNull(),
+  tournament_type: tournament_type_enum('tournament_type').notNull().default('club_internal'),
+  start_at: timestamp('start_at', { withTimezone: true }).notNull(),
+  tier_min: tier_enum('tier_min'),
+  tier_max: tier_enum('tier_max'),
+  status: tournament_status_enum('status').notNull().default('draft'),
+  created_by: uuid('created_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  byClub: index('idx_tournaments_club_start').on(t.club_id, t.start_at),
+}));
+
+export const registrations = pgTable('registrations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tournament_id: uuid('tournament_id').notNull().references(() => tournaments.id, { onDelete: 'cascade' }),
+  player_id: uuid('player_id').notNull().references(() => players.id, { onDelete: 'cascade' }),
+  status: registration_status_enum('status').notNull().default('registered'),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  uniqTournPlayer: unique('uq_tournament_player').on(t.tournament_id, t.player_id),
+}));
+
+export const brackets = pgTable('brackets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tournament_id: uuid('tournament_id').notNull().references(() => tournaments.id, { onDelete: 'cascade' }),
+  data: jsonb('data').notNull(),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const matches = pgTable('matches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tournament_id: uuid('tournament_id').notNull().references(() => tournaments.id, { onDelete: 'cascade' }),
+  team_a: uuid('team_a').array().notNull(),
+  team_b: uuid('team_b').array().notNull(),
+  scheduled_at: timestamp('scheduled_at', { withTimezone: true }),
+  status: match_status_enum('status').notNull().default('scheduled'),
+});
+
+// ── Task 1.6 will append scoring tables below ─────────────────────────────────
