@@ -3,7 +3,7 @@ const checks = [
   { path: '/', mustContain: 'Padelz' },
   { path: '/leaderboard', mustContain: 'Leaderboard' },
   { path: '/sign-in', mustContain: 'Sign in' },
-  { path: '/manifest.json', mustContain: 'padelz' },
+  { path: '/manifest.webmanifest', mustContain: 'padelz' },
 ];
 
 async function main() {
