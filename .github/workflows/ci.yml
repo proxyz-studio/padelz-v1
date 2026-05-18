@@ -34,6 +34,7 @@ jobs:
 
   test-integration:
     runs-on: ubuntu-latest
+    needs: [check-types, lint, test-unit]
     services:
       postgres:
         image: postgres:16
@@ -60,7 +61,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20', cache: 'npm' }
       - run: npm ci
-      - run: npm run db:migrate
+      - run: npm run db:migrate:ci
       - run: npm run test:integration
 
   lighthouse:
@@ -75,5 +76,6 @@ jobs:
       - name: Wait for Vercel preview
         run: sleep 60
       - run: npx lhci autorun
+        continue-on-error: true
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

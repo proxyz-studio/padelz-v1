@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm';
 
 beforeAll(async () => { /* drizzle migrations already applied via db:migrate */ });
 beforeEach(async () => {
+  // Keep this table list in sync with src/models/Schema.ts — new tables MUST be added here too.
   await db.execute(sql`TRUNCATE TABLE
     notifications, leaderboard_snapshots, points_ledger, match_results,
     matches, brackets, registrations, tournaments,
