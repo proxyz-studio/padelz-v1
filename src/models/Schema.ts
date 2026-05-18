@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, boolean, index, integer, jsonb, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable, boolean, date, index, integer, jsonb, numeric, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 
 // ── Enums (M1) ────────────────────────────────────────────────────────────────
 
@@ -112,4 +112,64 @@ export const matches = pgTable('matches', {
   status: match_status_enum('status').notNull().default('scheduled'),
 });
 
-// ── Task 1.6 will append scoring tables below ─────────────────────────────────
+// ── Enums (M3 / M4 / M1 notifications) ───────────────────────────────────────
+
+export const match_result_status_enum = pgEnum('match_result_status', ['pending', 'confirmed', 'disputed', 'admin_set', 'void']);
+export const leaderboard_period_enum = pgEnum('leaderboard_period', ['week', 'month', 'season']);
+export const notification_type_enum = pgEnum('notification_type', [
+  'score_pending', 'score_confirmed', 'score_disputed', 'pending_expired',
+  'score_overridden', 'tier_promoted', 'registration_confirmed',
+]);
+
+// ── Scoring + leaderboard + notifications tables (M3 / M4 / M1) ──────────────
+
+export const match_results = pgTable('match_results', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  match_id: uuid('match_id').notNull().unique().references(() => matches.id, { onDelete: 'restrict' }),
+  team_a_score: integer('team_a_score').notNull(),
+  team_b_score: integer('team_b_score').notNull(),
+  submitted_by: uuid('submitted_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  confirmed_by: uuid('confirmed_by').references(() => users.id, { onDelete: 'restrict' }),
+  status: match_result_status_enum('status').notNull().default('pending'),
+  submitted_at: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
+  confirmed_at: timestamp('confirmed_at', { withTimezone: true }),
+});
+
+export const points_ledger = pgTable('points_ledger', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  player_id: uuid('player_id').notNull().references(() => players.id, { onDelete: 'cascade' }),
+  match_id: uuid('match_id').notNull().references(() => matches.id, { onDelete: 'restrict' }),
+  points: numeric('points', { precision: 8, scale: 2 }).notNull(),
+  breakdown: jsonb('breakdown').notNull(),
+  earned_at: timestamp('earned_at', { withTimezone: true }).notNull(),
+}, (t) => ({
+  uniqPlayerMatch: unique('uq_player_match').on(t.player_id, t.match_id),
+  byPlayerEarned: index('idx_ledger_player_earned').on(t.player_id, t.earned_at),
+}));
+
+export const leaderboard_snapshots = pgTable('leaderboard_snapshots', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  period: leaderboard_period_enum('period').notNull(),
+  period_start: date('period_start').notNull(),
+  tier: tier_enum('tier').notNull(),
+  player_id: uuid('player_id').notNull().references(() => players.id, { onDelete: 'cascade' }),
+  rank: integer('rank').notNull(),
+  points_sum: numeric('points_sum', { precision: 10, scale: 2 }).notNull(),
+  match_count: integer('match_count').notNull(),
+  stale: boolean('stale').notNull().default(false),
+  rebuilt_at: timestamp('rebuilt_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  uniqPositionPlayer: unique('uq_period_tier_player').on(t.period, t.period_start, t.tier, t.player_id),
+  byRank: index('idx_lb_rank').on(t.period, t.period_start, t.tier, t.rank),
+}));
+
+export const notifications = pgTable('notifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: notification_type_enum('type').notNull(),
+  payload: jsonb('payload').notNull(),
+  read_at: timestamp('read_at', { withTimezone: true }),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  byUserUnread: index('idx_notif_user_unread').on(t.user_id, t.read_at, t.created_at),
+}));
