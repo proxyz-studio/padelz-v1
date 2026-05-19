@@ -113,6 +113,7 @@ export function SubmitScoreForm({ matchId, teamALabel, teamBLabel }: Props) {
           type="submit"
           disabled={pending}
           className="btn-link fn-green font-bold"
+          style={{ minHeight: 44 }}
         >
           {pending ? 'Submitting…' : 'Submit score'}
         </button>{' '}
@@ -121,6 +122,7 @@ export function SubmitScoreForm({ matchId, teamALabel, teamBLabel }: Props) {
         <button
           type="button"
           className="btn-link fn-red font-bold"
+          style={{ minHeight: 44 }}
           onClick={() => {
             setA('');
             setB('');
