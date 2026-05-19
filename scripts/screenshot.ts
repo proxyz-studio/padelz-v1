@@ -1,4 +1,4 @@
-import { chromium, devices } from '@playwright/test';
+import { chromium, devices, type Route } from '@playwright/test';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -16,7 +16,7 @@ const viewports = [
   { name: 'mobile', ...devices['Pixel 5'] },
 ];
 
-async function blockClerk(route) {
+async function blockClerk(route: Route) {
   if (/\.clerk\.accounts\.dev|\.clerk\.com|clerk-telemetry/.test(route.request().url())) {
     return route.abort();
   }
