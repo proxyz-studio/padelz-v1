@@ -1,14 +1,18 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { eq, and } from 'drizzle-orm';
+import { auth } from '@clerk/nextjs/server';
+import { and, eq } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import {
   clubs,
   players,
   registrations,
   tournaments,
+  users,
 } from '@/models/Schema';
 import { TierBadge } from '@/components/TierBadge';
+import { RegisterButton } from '@/features/tournaments/components/RegisterButton';
+import { TIER_TO_INT } from '@/features/profiles/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +57,19 @@ export default async function TournamentDetailPage({
   }> = [];
   let dbError: string | null = null;
 
+  // Auth state — gracefully handle no-auth (stub Clerk)
+  let clerkUserId: string | null = null;
+  try {
+    const a = await auth();
+    clerkUserId = a.userId;
+  } catch {
+    clerkUserId = null;
+  }
+
+  let alreadyRegistered = false;
+  let tierEligible = true;
+  let currentPlayerTier: string | null = null;
+
   try {
     const [t] = await db
       .select({
@@ -93,6 +110,44 @@ export default async function TournamentDetailPage({
           ),
         )
         .limit(64);
+
+      // If signed in, check if the calling player is already registered + tier-eligible
+      if (clerkUserId) {
+        const [u] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.clerk_id, clerkUserId))
+          .limit(1);
+        if (u) {
+          const [p] = await db
+            .select({ id: players.id, tier: players.tier })
+            .from(players)
+            .where(eq(players.user_id, u.id))
+            .limit(1);
+          if (p) {
+            currentPlayerTier = p.tier;
+            const playerInt = TIER_TO_INT[p.tier as keyof typeof TIER_TO_INT];
+            if (t.tier_min && playerInt < TIER_TO_INT[t.tier_min]) {
+              tierEligible = false;
+            }
+            if (t.tier_max && playerInt > TIER_TO_INT[t.tier_max]) {
+              tierEligible = false;
+            }
+            const [reg] = await db
+              .select({ id: registrations.id })
+              .from(registrations)
+              .where(
+                and(
+                  eq(registrations.tournament_id, t.id),
+                  eq(registrations.player_id, p.id),
+                  eq(registrations.status, 'registered'),
+                ),
+              )
+              .limit(1);
+            if (reg) alreadyRegistered = true;
+          }
+        }
+      }
     }
   } catch (e) {
     dbError = e instanceof Error ? e.message : String(e);
@@ -134,10 +189,12 @@ export default async function TournamentDetailPage({
     hour: 'numeric',
     minute: '2-digit',
   });
-  const tierBand =
+  const tierBandLabel =
     row.tier_min || row.tier_max
       ? `${row.tier_min ?? 'any'} → ${row.tier_max ?? 'any'}`
-      : 'All tiers';
+      : null;
+  const tierBandDisplay = tierBandLabel ?? 'All tiers';
+  const tournamentClosed = row.status !== 'open' && row.status !== 'draft';
 
   return (
     <div className="mx-auto max-w-4xl px-6 pt-10 pb-24">
@@ -167,23 +224,23 @@ export default async function TournamentDetailPage({
             </Link>
           </p>
 
-          {/* Register CTA — placeholder until M2 Task 4.3 ships registerForTournament */}
-          <div className="mt-10 border border-dashed border-[var(--color-rule)] p-5">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono mb-2">
+          <div className="mt-10">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono mb-3">
               Registration
             </p>
-            <p className="text-sm text-[var(--color-fg)]">
-              <Link
-                href="/sign-in"
-                className="text-[var(--color-pink)] hover:opacity-80"
-              >
-                Sign in to register
-              </Link>
-              <span className="text-[var(--color-fg-muted)]">
-                {' '}
-                · interactive flow lands with M2 scoring milestone
-              </span>
-            </p>
+            <RegisterButton
+              tournamentId={row.id}
+              signedIn={!!clerkUserId}
+              alreadyRegistered={alreadyRegistered}
+              tournamentClosed={tournamentClosed}
+              tierEligible={tierEligible}
+              tierBandLabel={tierBandLabel}
+            />
+            {currentPlayerTier && tierBandLabel ? (
+              <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
+                Tier band {tierBandLabel} · your tier {currentPlayerTier}
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -194,7 +251,7 @@ export default async function TournamentDetailPage({
           <dl className="space-y-3">
             <Stat label="Date" value={date} />
             <Stat label="Time" value={time} mono />
-            <Stat label="Tier band" value={tierBand} mono />
+            <Stat label="Tier band" value={tierBandDisplay} mono />
             <Stat label="Status" value={row.status} mono />
             <Stat
               label="Registered"
