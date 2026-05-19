@@ -9,6 +9,7 @@ if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
 const targets = [
   { path: '/', name: 'home' },
   { path: '/leaderboard', name: 'leaderboard' },
+  { path: '/p/seed-player-2', name: 'player-profile' },
 ];
 
 const viewports = [
