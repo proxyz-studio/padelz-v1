@@ -258,31 +258,73 @@ export default function MobileNavToggle({ children }: { children?: React.ReactNo
 }
 ```
 
-- [ ] **Step 4: Update `src/components/Nav.tsx` to render MobileNavToggle below 720px**
+- [ ] **Step 4: Update `src/components/Nav.tsx`**
 
-Open `src/components/Nav.tsx`. Find the existing nav links section. Wrap the existing links in a `<div className="desktop-only">` (hidden below 720px) and add `<MobileNavToggle />` import + render in a `<div className="mobile-only">`.
-
-Keep the brand mark `Padel-Z` always visible. Approximate structure:
+Current Nav.tsx (verified by the planning agent — do NOT re-read first, just replace the file contents):
 
 ```tsx
-import MobileNavToggle from './MobileNavToggle';
-// …
-<header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0' }}>
-  <Link href="/" className="no-underline">
-    Padel-<span className="pink font-bold">Z</span>
-  </Link>
-  <div className="desktop-only" style={{ display: 'flex', gap: 24 }}>
-    <Link href="/t" className="no-underline">Tournaments ↓</Link>
-    <Link href="/leaderboard" className="no-underline">Leaderboard</Link>
-    <Link href="/sign-in" className="no-underline">Sign in →</Link>
-  </div>
-  <div className="mobile-only">
-    <MobileNavToggle />
-  </div>
-</header>
+import Link from 'next/link';
+
+export function Nav() {
+  return (
+    <header className="px-4 pt-4 pb-20">
+      <div className="grid grid-cols-2 items-baseline gap-6 md:grid-cols-[1fr_auto_auto_auto_auto]">
+        <Link href="/" className="no-underline hover:no-underline">
+          Padel-<span className="pink font-bold">Z</span>
+        </Link>
+        <Link href="/t" className="hidden md:block">
+          Tournaments <span className="mute">↓</span>
+        </Link>
+        <Link href="/leaderboard" className="hidden md:block">
+          Leaderboard <span className="mute">↓</span>
+        </Link>
+        <Link href="/about" className="hidden md:block mute">
+          About
+        </Link>
+        <Link href="/sign-in" className="text-right">
+          Login <span className="mute">→</span>
+        </Link>
+      </div>
+    </header>
+  );
+}
 ```
 
-(Adjust to match the actual current Nav.tsx structure — don't blow away unrelated content.)
+Replace with:
+
+```tsx
+import Link from 'next/link';
+import MobileNavToggle from './MobileNavToggle';
+
+export function Nav() {
+  return (
+    <header className="px-4 pt-4 pb-20">
+      <div className="grid grid-cols-2 items-baseline gap-6 md:grid-cols-[1fr_auto_auto_auto_auto]">
+        <Link href="/" className="no-underline hover:no-underline">
+          Padel-<span className="pink font-bold">Z</span>
+        </Link>
+        <Link href="/t" className="hidden md:block">
+          Tournaments <span className="mute">↓</span>
+        </Link>
+        <Link href="/leaderboard" className="hidden md:block">
+          Leaderboard <span className="mute">↓</span>
+        </Link>
+        <Link href="/about" className="hidden md:block mute">
+          About
+        </Link>
+        <Link href="/sign-in" className="hidden md:block text-right">
+          Login <span className="mute">→</span>
+        </Link>
+        <div className="md:hidden text-right">
+          <MobileNavToggle />
+        </div>
+      </div>
+    </header>
+  );
+}
+```
+
+Two changes only: (1) add `hidden md:block` to the existing Login link so it disappears on mobile, (2) add a `md:hidden` wrapper rendering MobileNavToggle in its place. Tailwind `md:` here means ≥768px; this plus the `@media (max-width: 720px)` in globals.css means the gap 721-767px shows neither the Login link nor the hamburger — accept this as the boundary because it's so narrow no real device sits there.
 
 - [ ] **Step 5: Run E2E test, confirm it passes**
 
@@ -691,7 +733,7 @@ const URL = process.env.SITE_URL || 'http://localhost:3000';
 const ROUTES = [
   { url: '/leaderboard', file: 'leaderboard-mobile.png' },
   { url: '/t', file: 'tournament-mobile.png' },
-  { url: '/match/1/submit', file: 'submit-mobile.png' }, // adjust to a real seeded match ID
+  { url: '/sign-in', file: 'signin-mobile.png' }, // seed has no matches yet; sign-in is a stable third screenshot
 ];
 
 const browser = await chromium.launch();
@@ -850,13 +892,15 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: '#ffffff',
     theme_color: '#ffffff',
     icons: [
+      // Next.js serves /icon (from src/app/icon.tsx, 512x512) — point both regular and maskable purposes at it.
+      // Do NOT create /public/icons/*.png files; the next/og route is the single source of truth.
       { src: '/icon', sizes: '512x512', type: 'image/png' },
       { src: '/icon', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
     screenshots: [
       { src: '/screenshots/leaderboard-mobile.png', sizes: '1290x2796', type: 'image/png', form_factor: 'narrow', label: 'Leaderboard' },
       { src: '/screenshots/tournament-mobile.png', sizes: '1290x2796', type: 'image/png', form_factor: 'narrow', label: 'Tournament' },
-      { src: '/screenshots/submit-mobile.png', sizes: '1290x2796', type: 'image/png', form_factor: 'narrow', label: 'Submit score' },
+      { src: '/screenshots/signin-mobile.png', sizes: '1290x2796', type: 'image/png', form_factor: 'narrow', label: 'Sign in' },
     ],
     shortcuts: [
       { name: 'Leaderboard', url: '/leaderboard' },
@@ -889,14 +933,35 @@ git commit -m "feat(pwa): full manifest with shortcuts and install screenshots"
 **Files:**
 - Modify: `public/sw.js` (or wherever Task 2.1 reconnaissance located the SW)
 
-- [ ] **Step 1: Refactor SW to use build-ID-keyed cache**
+Current `public/sw.js` (verified by the planning agent — fully replace the file with the version below; existing handler is 24 lines, no preservation logic needed):
 
 ```javascript
-// Replaced by postbuild script — see scripts/inject-build-id.mjs
+const CACHE_NAME = 'padelz-shell-v1';
+const APP_SHELL = ['/', '/leaderboard', '/manifest.webmanifest'];
+// (install/activate/fetch handlers using CACHE_NAME)
+```
+
+- [ ] **Step 1: Move source to a template, then write the new SW**
+
+We can't track `public/sw.js` directly because the postbuild step rewrites it on every build (would dirty git). Instead: keep the source at `public/sw.template.js` (tracked), let postbuild generate `public/sw.js` (gitignored).
+
+```bash
+cd /Users/tews/Code/padelz-v1
+git mv public/sw.js public/sw.template.js
+echo "/public/sw.js" >> .gitignore
+```
+
+- [ ] **Step 2: Write the new template content to `public/sw.template.js`**
+
+Replace the entire file with:
+
+```javascript
 const BUILD_ID = '__BUILD_ID__';
 const CACHE = `padelz-v${BUILD_ID}`;
+const APP_SHELL = ['/', '/leaderboard', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(APP_SHELL)));
   self.skipWaiting();
 });
 
@@ -904,20 +969,29 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
-    await clients.claim();
+    await self.clients.claim();
   })());
 });
 
-// (Preserve existing fetch handler / strategy from the current sw.js — only the cache name and lifecycle changes here.)
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  if (req.url.includes('/api/') || req.url.includes('/_next/')) return;
+  event.respondWith(
+    caches.open(CACHE).then(async (cache) => {
+      const cached = await cache.match(req);
+      const network = fetch(req).then((res) => { cache.put(req, res.clone()); return res; }).catch(() => cached);
+      return cached || network;
+    })
+  );
+});
 ```
 
-Preserve the rest of the existing SW (fetch handler, runtime caching strategy). Only swap the cache key generation + lifecycle hooks.
-
-- [ ] **Step 2: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add public/sw.js
-git commit -m "feat(pwa): build-ID-keyed SW cache with skipWaiting and clientsClaim"
+git add public/sw.template.js .gitignore
+git commit -m "feat(pwa): SW template with build-ID-keyed cache and old-cache cleanup"
 ```
 
 ---
@@ -937,8 +1011,8 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const BUILD_ID_PATH = resolve('.next/BUILD_ID');
-const SW_PATH = resolve('public/sw.js');
-const SW_OUT_PATH = resolve('.next/static/sw.js'); // also write to served copy
+const TEMPLATE = resolve('public/sw.template.js');
+const OUT = resolve('public/sw.js');
 
 if (!existsSync(BUILD_ID_PATH)) {
   console.error('inject-build-id: .next/BUILD_ID not found; run after `next build`.');
@@ -946,11 +1020,13 @@ if (!existsSync(BUILD_ID_PATH)) {
 }
 
 const buildId = readFileSync(BUILD_ID_PATH, 'utf8').trim();
-const sw = readFileSync(SW_PATH, 'utf8');
+const sw = readFileSync(TEMPLATE, 'utf8');
 const out = sw.replace(/__BUILD_ID__/g, buildId);
-writeFileSync(SW_PATH, out, 'utf8');
+writeFileSync(OUT, out, 'utf8');
 console.log(`inject-build-id: wrote BUILD_ID=${buildId} into public/sw.js`);
 ```
+
+This reads from `public/sw.template.js` (tracked) and writes to `public/sw.js` (gitignored), so git stays clean on every build.
 
 - [ ] **Step 2: Add `postbuild` to package.json**
 
@@ -966,15 +1042,7 @@ In the `scripts` object, add:
 npm run build
 ```
 
-Inspect `public/sw.js` after build — `__BUILD_ID__` should be replaced with a real hash.
-
-NOTE: This modifies a tracked file on each build. To avoid dirty git state, revert after testing:
-
-```bash
-git checkout public/sw.js
-```
-
-For Vercel builds this is fine — they run on ephemeral runners.
+Inspect `public/sw.js` after build — file should exist (it's gitignored, so it appears after the first build), and `__BUILD_ID__` should be replaced with a real hash. Git status stays clean.
 
 - [ ] **Step 4: Commit**
 
@@ -1014,13 +1082,18 @@ test.describe('service worker cache versioning', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test**
+- [ ] **Step 2: Run the test against a built+served bundle**
+
+Dev mode does NOT run the postbuild SW injection. Must use the production build:
 
 ```bash
-npx playwright test tests/e2e/sw-cache-invalidation.spec.ts
+npm run build
+PORT=3001 npm start &
+SERVER_PID=$!
+sleep 5
+PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test tests/e2e/sw-cache-invalidation.spec.ts
+kill $SERVER_PID
 ```
-
-Expected: pass against a built+served bundle (not dev mode — needs `npm run build && npm start`).
 
 - [ ] **Step 3: Commit**
 
@@ -1067,15 +1140,18 @@ If all 6 checks pass: Phase 2 done.
 
 ```bash
 cd /Users/tews/Code/padelz-v1
-npx lhci autorun \
+npx --yes @lhci/cli@0.13 autorun \
   --collect.url=https://padelz-v1.vercel.app/ \
   --collect.url=https://padelz-v1.vercel.app/leaderboard \
   --collect.url=https://padelz-v1.vercel.app/t \
   --collect.url=https://padelz-v1.vercel.app/sign-in \
-  --collect.settings.preset=mobile \
+  --collect.settings.preset=desktop \
+  --collect.numberOfRuns=1 \
   --upload.target=temporary-public-storage \
   | tee .lhci-output.txt
 ```
+
+(Note: the project's existing `lighthouserc.js` sets mobile preset already; if it's picked up automatically, the CLI flags may be ignored. Confirm by reading `.lhci-output.txt` for which preset ran.)
 
 - [ ] **Step 2: Parse results into a markdown table**
 
