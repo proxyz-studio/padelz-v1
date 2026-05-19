@@ -6,6 +6,7 @@
     "dev:next": "next dev",
     "dev": "run-p dev:*",
     "build": "next build",
+    "postbuild": "node scripts/inject-build-id.mjs",
     "build:local": "dotenv -e .env.local -o -- next build",
     "start": "next start",
     "clean": "rimraf .next out coverage",
