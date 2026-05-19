@@ -11,7 +11,7 @@
   --color-pink: #ff4193;
   --color-pink-dim: #b82d6a;
 
-  /* Tier signals — sports almanac palette */
+  /* Tier signals */
   --color-tier-bronze: #b2773a;
   --color-tier-silver: #a8a8a8;
   --color-tier-gold: #d4a843;
@@ -19,25 +19,36 @@
 
   /* Typography */
   --font-mono: var(--font-plex-mono), 'IBM Plex Mono', ui-monospace, monospace;
+  --font-sans: var(--font-plex-sans), 'IBM Plex Sans', system-ui, sans-serif;
 }
 
-/* Force dark mode — PROXYZ identity is dark editorial. No light mode follow-system. */
+/* Force dark mode — PROXYZ identity is dark editorial */
 html {
   color-scheme: dark;
   background: var(--color-bg);
   color: var(--color-fg);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-feature-settings: 'ss01' on, 'ss02' on, 'zero' on, 'calt' on;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Mono is the accent voice: labels, data, code, timestamps */
+.font-mono,
+[data-mono],
+code,
+kbd,
+samp {
+  font-family: var(--font-mono);
+}
+
 body {
   position: relative;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* Subtle blueprint grid */
+/* Layer 0 — subtle blueprint grid */
 body::before {
   content: '';
   position: fixed;
@@ -45,13 +56,32 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
   background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse 90% 80% at center, black 30%, transparent 85%);
 }
 
-/* Grain overlay — paper texture */
+/* Layer 1 — gradient mesh from upper right */
+body > .mesh-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 85% 0%,
+      rgba(255, 65, 147, 0.08) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 70% 60% at 15% 100%,
+      rgba(255, 65, 147, 0.04) 0%,
+      transparent 70%
+    );
+}
+
+/* Layer 2 — grain overlay */
 body::after {
   content: '';
   position: fixed;
@@ -63,11 +93,12 @@ body::after {
   background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
 }
 
-/* Make sure content sits above the overlays */
+/* Content sits above background layers */
 header,
 main,
 footer,
-nav {
+nav,
+.ticker {
   position: relative;
   z-index: 2;
 }
@@ -84,7 +115,125 @@ nav {
   outline-offset: 4px;
 }
 
-/* Tabular numerals everywhere — keeps stats aligned */
+/* Tabular numerals */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Ticker marquee — pure CSS, respects reduced motion */
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 60s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+}
+
+/* Platinum tier shimmer */
+@keyframes shimmer {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 65, 147, 0);
+  }
+  50% {
+    box-shadow: 0 0 12px 0 rgba(255, 65, 147, 0.35);
+  }
+}
+
+.shimmer-platinum {
+  animation: shimmer 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-platinum {
+    animation: none;
+  }
+}
+
+/* Pulse dot for active module */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot {
+    animation: none;
+  }
+}
+
+/* Section running line — connects § markers */
+.section-rail {
+  position: relative;
+}
+.section-rail::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--color-rule) 5%,
+    var(--color-rule) 95%,
+    transparent 100%
+  );
+}
+
+/* SSR-safe entrance animations — pure CSS, auto-honors prefers-reduced-motion */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-up-blur {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.anim-fade-up {
+  animation: fade-up 0.6s ease-out both;
+}
+
+.anim-fade-up-blur {
+  animation: fade-up-blur 0.9s ease-out both;
+}
+
+.anim-fade-in {
+  animation: fade-in 0.6s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-up,
+  .anim-fade-up-blur,
+  .anim-fade-in {
+    animation: none;
+  }
 }
