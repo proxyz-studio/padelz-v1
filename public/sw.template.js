@@ -3,8 +3,16 @@ const CACHE = `padelz-v${BUILD_ID}`;
 const APP_SHELL = ['/', '/leaderboard', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(APP_SHELL)));
-  self.skipWaiting();
+  // skipWaiting must be inside waitUntil so the new worker doesn't activate
+  // until the app shell is cached. Otherwise on slow networks the worker
+  // can promote with an empty cache, the activate handler then deletes the
+  // old cache, and the user is left with nothing.
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(APP_SHELL))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener('activate', (event) => {
