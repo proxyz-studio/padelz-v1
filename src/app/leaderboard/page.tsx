@@ -39,7 +39,7 @@ export default async function LeaderboardPage() {
         registration order.
       </p>
 
-      <div className="rule mt-20">
+      <div className="rule mt-20 desktop-only">
         <div className="grid grid-cols-[60px_1fr_280px_56px] gap-6 mute pt-6 pb-3">
           <span>Rank</span>
           <span>Player</span>

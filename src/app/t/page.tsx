@@ -56,7 +56,7 @@ export default async function TournamentsListPage() {
         Score-confirmed results feed the leaderboard nightly.
       </p>
 
-      <div className="rule mt-20">
+      <div className="rule mt-20 desktop-only">
         <div className="grid grid-cols-[80px_1fr_280px_160px_64px_56px] gap-6 mute pt-6 pb-3">
           <span>Year</span>
           <span>Tournament</span>
@@ -66,6 +66,7 @@ export default async function TournamentsListPage() {
           <span></span>
         </div>
       </div>
+      <div className="rule mt-20 mobile-only"></div>
 
       {dbError ? (
         <div className="px-3 py-12 mute">
