@@ -1,26 +1,90 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Palette — editorial dark + PROXYZ pink */
+  --color-bg: #0a0a0a;
+  --color-bg-elevated: #141414;
+  --color-fg: #e8e8e8;
+  --color-fg-muted: #6b6b6b;
+  --color-fg-faint: #3a3a3a;
+  --color-rule: #1f1f1f;
+  --color-pink: #ff4193;
+  --color-pink-dim: #b82d6a;
+
+  /* Tier signals — sports almanac palette */
+  --color-tier-bronze: #b2773a;
+  --color-tier-silver: #a8a8a8;
+  --color-tier-gold: #d4a843;
+  --color-tier-platinum: #ff4193;
+
+  /* Typography */
+  --font-mono: var(--font-plex-mono), 'IBM Plex Mono', ui-monospace, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Force dark mode — PROXYZ identity is dark editorial. No light mode follow-system. */
+html {
+  color-scheme: dark;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-feature-settings: 'ss01' on, 'ss02' on, 'zero' on, 'calt' on;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Subtle blueprint grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+
+/* Grain overlay — paper texture */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+}
+
+/* Make sure content sits above the overlays */
+header,
+main,
+footer,
+nav {
+  position: relative;
+  z-index: 2;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-pink);
+  color: var(--color-bg);
+}
+
+/* Focus state */
+*:focus-visible {
+  outline: 1px solid var(--color-pink);
+  outline-offset: 4px;
+}
+
+/* Tabular numerals everywhere — keeps stats aligned */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
