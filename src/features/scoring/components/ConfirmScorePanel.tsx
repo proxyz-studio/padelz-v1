@@ -127,6 +127,7 @@ export function ConfirmScorePanel({
               onClick={handleConfirm}
               disabled={pending}
               className="btn-link fn-green font-bold"
+              style={{ minHeight: 44 }}
             >
               {pending && state.kind === 'idle' ? 'Confirming…' : 'Confirm'}
             </button>{' '}
@@ -139,6 +140,7 @@ export function ConfirmScorePanel({
           onClick={handleDispute}
           disabled={pending}
           className="btn-link fn-red font-bold"
+          style={{ minHeight: 44 }}
         >
           Dispute
         </button>
