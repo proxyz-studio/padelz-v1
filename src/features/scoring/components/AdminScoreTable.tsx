@@ -120,9 +120,70 @@ function AdminRow({ row }: { row: AdminMatchRow }) {
   const aWon = aScore !== null && bScore !== null && aScore > bScore;
   const bWon = aScore !== null && bScore !== null && bScore > aScore;
 
+  const overrideForm = open && !row.admin_is_participant && !isVoided && !isLockedIn ? (
+    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--color-rule)' }}>
+      <div className="flex flex-wrap items-baseline gap-8">
+        <label>
+          <span className="mute">{row.team_a_handles}</span>{' '}
+          <input
+            className="score-input fn-blue"
+            type="number"
+            min={0}
+            max={99}
+            value={a}
+            onChange={(e) => setA(e.target.value)}
+          />
+        </label>
+        <label>
+          <span className="mute">{row.team_b_handles}</span>{' '}
+          <input
+            className="score-input fn-blue"
+            type="number"
+            min={0}
+            max={99}
+            value={b}
+            onChange={(e) => setB(e.target.value)}
+          />
+        </label>
+        <span className="ml-auto">
+          <button
+            type="button"
+            className="btn-link fn-blue font-bold"
+            onClick={handleSave}
+            disabled={pending}
+            style={{ minHeight: 44 }}
+          >
+            {pending ? 'Saving…' : 'Save override'}
+          </button>{' '}
+          <span className="fn-blue font-bold">→</span>
+          <span className="mute ml-8">·</span>{' '}
+          <button
+            type="button"
+            className="btn-link fn-red font-bold"
+            onClick={handleVoid}
+            disabled={pending}
+            style={{ minHeight: 44 }}
+          >
+            Void match
+          </button>
+        </span>
+      </div>
+      <p className="m-0 mt-3 mute">
+        Rewriting points for this match — affected tier snapshots will be flagged stale.
+      </p>
+      {error ? (
+        <p className="m-0 mt-3">
+          <span className="fn-red font-bold">{error.code}</span>
+          <span className="mute">: {error.message}</span>
+        </p>
+      ) : null}
+    </div>
+  ) : null;
+
   return (
     <>
-      <tr>
+      {/* Desktop row */}
+      <tr className="desktop-only">
         <td>
           <span className="font-bold">{row.team_a_handles}</span>{' '}
           <span className="mute">vs</span>{' '}
@@ -192,7 +253,7 @@ function AdminRow({ row }: { row: AdminMatchRow }) {
         </td>
       </tr>
       {open && !row.admin_is_participant && !isVoided && !isLockedIn ? (
-        <tr>
+        <tr className="desktop-only">
           <td colSpan={5} style={{ background: '#fafafa' }}>
             <div className="flex flex-wrap items-baseline gap-8">
               <label>
@@ -250,6 +311,59 @@ function AdminRow({ row }: { row: AdminMatchRow }) {
           </td>
         </tr>
       ) : null}
+
+      {/* Mobile card */}
+      <tr className="mobile-only">
+        <td colSpan={5} style={{ padding: 0 }}>
+          <div style={{ padding: '16px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
+              <strong>
+                {row.team_a_handles} <span className="mute">vs</span> {row.team_b_handles}
+              </strong>
+              <span className={STATUS_CLS[row.status]} style={{ fontSize: 14, whiteSpace: 'nowrap' }}>
+                {STATUS_LABEL[row.status]}
+              </span>
+            </div>
+            <div style={{ marginTop: 6 }}>
+              {aScore !== null && bScore !== null ? (
+                <>
+                  <span className={aWon ? 'fn-green font-bold' : ''}>{aScore}</span>
+                  <span className="mute"> – </span>
+                  <span className={bWon ? 'fn-green font-bold' : ''}>{bScore}</span>
+                </>
+              ) : (
+                <span className="mute">—</span>
+              )}
+            </div>
+            {row.admin_is_participant ? (
+              <div style={{ marginTop: 8 }}>
+                <span className="fn-red font-bold">Conflict of interest</span>
+              </div>
+            ) : isVoided ? (
+              <div style={{ marginTop: 8 }}>
+                <span className="mute">Voided · locked</span>
+              </div>
+            ) : isLockedIn ? (
+              <div style={{ marginTop: 8 }}>
+                <span className="fn-green font-bold">Locked in</span>
+              </div>
+            ) : (
+              <div style={{ marginTop: 12, display: 'flex', gap: 24 }}>
+                <button
+                  type="button"
+                  className="btn-link fn-blue font-bold"
+                  onClick={() => setOpen(!open)}
+                  disabled={pending}
+                  style={{ minHeight: 44 }}
+                >
+                  {open ? 'Cancel' : row.status === 'unscored' ? 'Set score →' : 'Override →'}
+                </button>
+              </div>
+            )}
+            {overrideForm}
+          </div>
+        </td>
+      </tr>
     </>
   );
 }
