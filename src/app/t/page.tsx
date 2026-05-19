@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { asc, eq, gte, sql } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import { clubs, registrations, tournaments } from '@/models/Schema';
@@ -78,21 +79,63 @@ export default async function TournamentsListPage() {
           Q3 2026.
         </div>
       ) : (
-        <table className="table">
-          <colgroup>
-            <col style={{ width: '80px' }} />
-            <col />
-            <col style={{ width: '280px' }} />
-            <col style={{ width: '160px' }} />
-            <col style={{ width: '64px' }} />
-            <col className="arrow" />
-          </colgroup>
-          <tbody>
-            {rows.map((t) => (
-              <TournamentCard key={t.slug} t={t} />
-            ))}
-          </tbody>
-        </table>
+        <>
+          <div className="desktop-only">
+            <table className="table">
+              <colgroup>
+                <col style={{ width: '80px' }} />
+                <col />
+                <col style={{ width: '280px' }} />
+                <col style={{ width: '160px' }} />
+                <col style={{ width: '64px' }} />
+                <col className="arrow" />
+              </colgroup>
+              <tbody>
+                {rows.map((t) => (
+                  <TournamentCard key={t.slug} t={t} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mobile-only">
+            {rows.map((t) => {
+              const year = t.start_at.getUTCFullYear();
+              const tierBand =
+                t.tier_min || t.tier_max
+                  ? `${t.tier_min ?? 'any'} → ${t.tier_max ?? 'any'}`
+                  : 'All tiers';
+              const statusCls =
+                t.status === 'open'
+                  ? 'fn-green font-bold'
+                  : t.status === 'in_progress'
+                    ? 'fn-blue font-bold'
+                    : 'mute';
+              const date = t.start_at.toLocaleDateString('en-US', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+              });
+              return (
+                <Link key={t.slug} href={`/t/${t.slug}`} className="no-underline" style={{ display: 'block', padding: '16px 0', borderBottom: '1px solid var(--color-rule)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
+                    <strong>{t.name}</strong>
+                    <span className={statusCls} style={{ fontSize: 14 }}>{t.status.replace('_', ' ')}</span>
+                  </div>
+                  <div className="mute" style={{ fontSize: 14, marginTop: 4 }}>
+                    {year} · {t.format} · {t.tournament_type}
+                  </div>
+                  <div className="mute" style={{ fontSize: 14, marginTop: 4 }}>
+                    {date} · {t.club_name}
+                  </div>
+                  <div className="mute" style={{ fontSize: 14, marginTop: 4 }}>
+                    {tierBand}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
