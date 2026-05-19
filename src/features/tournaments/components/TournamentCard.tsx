@@ -14,13 +14,13 @@ export type TournamentCardData = {
   registered_count: number;
 };
 
-const FORMAT_LABEL: Record<string, string> = {
+export const FORMAT_LABEL: Record<string, string> = {
   americano: 'Americano',
   mexicano: 'Mexicano',
   round_robin: 'Round-robin',
   bracket: 'Bracket',
 };
-const TYPE_LABEL: Record<string, string> = {
+export const TYPE_LABEL: Record<string, string> = {
   open: 'Open',
   club_internal: 'Club',
   group: 'Group',

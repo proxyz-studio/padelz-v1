@@ -32,6 +32,11 @@
 
   /* Typography — single-spec discipline */
   --font-sans: var(--font-inter), 'Univers Next Pro', system-ui, -apple-system, sans-serif;
+
+  /* Align Tailwind's md: prefix with the project's custom 720px mobile
+   * breakpoint so `md:hidden` / `hidden md:block` flip at the same width
+   * as the `.desktop-only` / `.mobile-only` utility classes. */
+  --breakpoint-md: 720px;
 }
 
 html {

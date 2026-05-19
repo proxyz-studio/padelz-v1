@@ -3,7 +3,9 @@ import { asc, eq, gte, sql } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import { clubs, registrations, tournaments } from '@/models/Schema';
 import {
+  FORMAT_LABEL,
   TournamentCard,
+  TYPE_LABEL,
   type TournamentCardData,
 } from '@/features/tournaments/components/TournamentCard';
 
@@ -124,7 +126,8 @@ export default async function TournamentsListPage() {
                     <span className={statusCls} style={{ fontSize: 14 }}>{t.status.replace('_', ' ')}</span>
                   </div>
                   <div className="mute" style={{ fontSize: 14, marginTop: 4 }}>
-                    {year} · {t.format} · {t.tournament_type}
+                    {year} · {FORMAT_LABEL[t.format] ?? t.format} ·{' '}
+                    {TYPE_LABEL[t.tournament_type] ?? t.tournament_type}
                   </div>
                   <div className="mute" style={{ fontSize: 14, marginTop: 4 }}>
                     {date} · {t.club_name}
