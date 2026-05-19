@@ -59,42 +59,70 @@ export default async function LeaderboardPage() {
           tournament. Sign in to be the first on the board.
         </div>
       ) : (
-        <table className="table">
-          <colgroup>
-            <col style={{ width: '60px' }} />
-            <col />
-            <col style={{ width: '280px' }} />
-            <col className="arrow" />
-          </colgroup>
-          <tbody>
+        <>
+          <div className="desktop-only">
+            <table className="table">
+              <colgroup>
+                <col style={{ width: '60px' }} />
+                <col />
+                <col style={{ width: '280px' }} />
+                <col className="arrow" />
+              </colgroup>
+              <tbody>
+                {rows.map((p, i) => {
+                  const rank = i + 1;
+                  const rankCls =
+                    rank === 1
+                      ? 'pink font-bold tabular-nums no-underline'
+                      : rank <= 3
+                        ? 'fn-green font-bold tabular-nums no-underline'
+                        : 'mute tabular-nums no-underline';
+                  return (
+                    <tr key={p.handle}>
+                      <td className={rankCls}>{String(rank).padStart(2, '0')}</td>
+                      <td>
+                        <Link href={`/p/${p.handle}`} className="no-underline">
+                          <span className="font-bold">{p.name}</span>{' '}
+                          <span className="mute">@{p.handle}</span>
+                        </Link>
+                      </td>
+                      <td className="mute">
+                        <TierBadge tier={p.tier} />
+                      </td>
+                      <td className="arrow no-underline">
+                        <Link href={`/p/${p.handle}`}>→</Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mobile-only">
             {rows.map((p, i) => {
               const rank = i + 1;
-              const rankCls =
-                rank === 1
-                  ? 'pink font-bold tabular-nums no-underline'
-                  : rank <= 3
-                    ? 'fn-green font-bold tabular-nums no-underline'
-                    : 'mute tabular-nums no-underline';
+              const tierCls =
+                p.tier === 'platinum'
+                  ? 'pink font-bold'
+                  : p.tier === 'diamond'
+                    ? 'fn-blue font-bold'
+                    : 'mute';
               return (
-                <tr key={p.handle}>
-                  <td className={rankCls}>{String(rank).padStart(2, '0')}</td>
-                  <td>
-                    <Link href={`/p/${p.handle}`} className="no-underline">
+                <Link key={p.handle} href={`/p/${p.handle}`} className="no-underline" style={{ display: 'block', padding: '16px 0', borderBottom: '1px solid var(--color-rule)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <div>
+                      <strong style={{ marginRight: 8 }}>{String(rank).padStart(2, '0')}</strong>
                       <span className="font-bold">{p.name}</span>{' '}
                       <span className="mute">@{p.handle}</span>
-                    </Link>
-                  </td>
-                  <td className="mute">
-                    <TierBadge tier={p.tier} />
-                  </td>
-                  <td className="arrow no-underline">
-                    <Link href={`/p/${p.handle}`}>→</Link>
-                  </td>
-                </tr>
+                    </div>
+                    <span className={tierCls} style={{ fontSize: 14 }}>{p.tier}</span>
+                  </div>
+                </Link>
               );
             })}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
 
       <p className="m-0 mt-8 mute tabular-nums">
