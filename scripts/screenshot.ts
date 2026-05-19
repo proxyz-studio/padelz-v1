@@ -10,6 +10,7 @@ const targets = [
   { path: '/', name: 'home' },
   { path: '/leaderboard', name: 'leaderboard' },
   { path: '/p/seed-player-2', name: 'player-profile' },
+  { path: '/c/destination-padel', name: 'club-page' },
 ];
 
 const viewports = [
