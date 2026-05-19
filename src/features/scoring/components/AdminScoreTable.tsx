@@ -14,10 +14,6 @@ export type AdminMatchRow = {
   admin_is_participant: boolean;
 };
 
-type Props = {
-  rows: AdminMatchRow[];
-};
-
 const STATUS_LABEL: Record<AdminMatchRow['status'], string> = {
   unscored: 'No score',
   pending: 'Pending',
@@ -27,37 +23,36 @@ const STATUS_LABEL: Record<AdminMatchRow['status'], string> = {
   void: 'Void',
 };
 
-const STATUS_COLOR: Record<AdminMatchRow['status'], string> = {
-  unscored: 'text-[var(--color-fg-muted)]',
-  pending: 'text-[var(--color-pink)]',
-  confirmed: 'text-[var(--color-tier-gold)]',
-  disputed: 'text-[var(--color-pink)]',
-  admin_set: 'text-[var(--color-fg)]',
-  void: 'text-[var(--color-fg-faint)]',
+const STATUS_CLS: Record<AdminMatchRow['status'], string> = {
+  unscored: 'mute',
+  pending: 'mute',
+  confirmed: 'fn-green font-bold',
+  disputed: 'fn-red font-bold',
+  admin_set: 'fn-blue font-bold',
+  void: 'fn-red font-bold',
+};
+
+type Props = {
+  rows: AdminMatchRow[];
 };
 
 export function AdminScoreTable({ rows }: Props) {
   if (rows.length === 0) {
     return (
-      <div className="border border-dashed border-[var(--color-rule)] px-6 py-12 text-center">
-        <p className="text-sm text-[var(--color-fg-muted)] leading-relaxed">
-          No matches scheduled yet — generate the bracket first.
-        </p>
+      <div className="px-3 py-12 mute">
+        No matches scheduled yet — generate the bracket first.
       </div>
     );
   }
-
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-left text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono border-b border-[var(--color-rule)]">
-          <th className="py-3 pr-4 font-normal">Team A</th>
-          <th className="py-3 pr-4 font-normal">Team B</th>
-          <th className="py-3 pr-4 font-normal w-20">Score</th>
-          <th className="py-3 pr-4 font-normal w-28">Status</th>
-          <th className="py-3 pr-4 font-normal w-48">Actions</th>
-        </tr>
-      </thead>
+    <table className="table">
+      <colgroup>
+        <col />
+        <col style={{ width: '280px' }} />
+        <col style={{ width: '160px' }} />
+        <col style={{ width: '200px' }} />
+        <col className="arrow" />
+      </colgroup>
       <tbody>
         {rows.map((row) => (
           <AdminRow key={row.match_id} row={row} />
@@ -118,104 +113,138 @@ function AdminRow({ row }: { row: AdminMatchRow }) {
   };
 
   const isVoided = row.status === 'void';
+  const isLockedIn =
+    row.status === 'confirmed' || row.status === 'admin_set';
+  const aScore = row.team_a_score;
+  const bScore = row.team_b_score;
+  const aWon = aScore !== null && bScore !== null && aScore > bScore;
+  const bWon = aScore !== null && bScore !== null && bScore > aScore;
 
   return (
     <>
-      <tr className="border-b border-[var(--color-rule)] hover:bg-white/[0.02] transition-colors">
-        <td className="py-3 pr-4 font-mono text-xs">{row.team_a_handles}</td>
-        <td className="py-3 pr-4 font-mono text-xs">{row.team_b_handles}</td>
-        <td className="py-3 pr-4 tabular-nums font-mono">
-          {row.team_a_score !== null && row.team_b_score !== null
-            ? `${row.team_a_score} – ${row.team_b_score}`
-            : '—'}
+      <tr>
+        <td>
+          <span className="font-bold">{row.team_a_handles}</span>{' '}
+          <span className="mute">vs</span>{' '}
+          <span className="font-bold">{row.team_b_handles}</span>
         </td>
-        <td className="py-3 pr-4">
-          <span
-            className={`text-[10px] uppercase tracking-[0.22em] font-mono ${STATUS_COLOR[row.status]}`}
-          >
-            ● {STATUS_LABEL[row.status]}
+        <td className="mute">
+          <span className={STATUS_CLS[row.status]}>
+            {STATUS_LABEL[row.status]}
           </span>
         </td>
-        <td className="py-3 pr-4">
+        <td className="score no-underline">
+          {aScore !== null && bScore !== null ? (
+            <>
+              <span className={aWon ? 'fn-green font-bold' : ''}>{aScore}</span>
+              <span className="mute"> – </span>
+              <span className={bWon ? 'fn-green font-bold' : ''}>{bScore}</span>
+            </>
+          ) : (
+            <span className="mute">—</span>
+          )}
+        </td>
+        <td>
           {row.admin_is_participant ? (
             <span
-              className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono cursor-not-allowed"
+              className="fn-red font-bold"
               title="You are a participant in this match — another admin must override."
             >
               Conflict of interest
             </span>
           ) : isVoided ? (
-            <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-faint)] font-mono">
-              Voided · locked
-            </span>
+            <span className="mute">Voided · locked</span>
+          ) : isLockedIn ? (
+            <span className="fn-green font-bold">Locked in</span>
+          ) : row.status === 'unscored' ? (
+            <button
+              type="button"
+              className="btn-link fn-blue font-bold"
+              onClick={() => setOpen(!open)}
+              disabled={pending}
+            >
+              {open ? 'Cancel' : 'Set score'}
+            </button>
           ) : (
             <button
               type="button"
+              className="btn-link fn-blue font-bold"
               onClick={() => setOpen(!open)}
               disabled={pending}
-              className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-pink)] font-mono hover:text-[var(--color-fg)] transition-colors disabled:opacity-50"
             >
-              {open ? 'Cancel' : row.status === 'unscored' ? 'Set score' : 'Override'}
+              {open ? 'Cancel' : 'Override'}
+            </button>
+          )}
+        </td>
+        <td className="arrow no-underline">
+          {row.admin_is_participant || isVoided || isLockedIn ? (
+            <span className="mute">—</span>
+          ) : (
+            <button
+              type="button"
+              className="btn-link fn-blue font-bold"
+              onClick={() => setOpen(!open)}
+              disabled={pending}
+            >
+              →
             </button>
           )}
         </td>
       </tr>
-      {open && !row.admin_is_participant && !isVoided ? (
-        <tr className="border-b border-[var(--color-rule)] bg-white/[0.02]">
-          <td colSpan={5} className="py-4 px-4">
-            <div className="flex flex-col md:flex-row md:items-end gap-4">
-              <label className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-                  {row.team_a_handles}
-                </span>
+      {open && !row.admin_is_participant && !isVoided && !isLockedIn ? (
+        <tr>
+          <td colSpan={5} style={{ background: '#fafafa' }}>
+            <div className="flex flex-wrap items-baseline gap-8">
+              <label>
+                <span className="mute">{row.team_a_handles}</span>{' '}
                 <input
+                  className="score-input fn-blue"
                   type="number"
-                  inputMode="numeric"
                   min={0}
                   max={99}
                   value={a}
                   onChange={(e) => setA(e.target.value)}
-                  className="bg-transparent border border-[var(--color-rule)] focus:border-[var(--color-pink)] outline-none px-3 py-2 text-xl font-light tabular-nums w-20"
-                  placeholder="—"
                 />
               </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-                  {row.team_b_handles}
-                </span>
+              <label>
+                <span className="mute">{row.team_b_handles}</span>{' '}
                 <input
+                  className="score-input fn-blue"
                   type="number"
-                  inputMode="numeric"
                   min={0}
                   max={99}
                   value={b}
                   onChange={(e) => setB(e.target.value)}
-                  className="bg-transparent border border-[var(--color-rule)] focus:border-[var(--color-pink)] outline-none px-3 py-2 text-xl font-light tabular-nums w-20"
-                  placeholder="—"
                 />
               </label>
-              <div className="flex gap-2 md:ml-auto">
+              <span className="ml-auto">
                 <button
                   type="button"
+                  className="btn-link fn-blue font-bold"
                   onClick={handleSave}
                   disabled={pending}
-                  className="border border-[var(--color-pink)] bg-[var(--color-pink)] text-[var(--color-bg)] px-4 py-2 text-[10px] uppercase tracking-[0.22em] font-mono hover:bg-transparent hover:text-[var(--color-pink)] transition-colors disabled:opacity-50 disabled:cursor-wait"
                 >
                   {pending ? 'Saving…' : 'Save override'}
-                </button>
+                </button>{' '}
+                <span className="fn-blue font-bold">→</span>
+                <span className="mute ml-8">·</span>{' '}
                 <button
                   type="button"
+                  className="btn-link fn-red font-bold"
                   onClick={handleVoid}
                   disabled={pending}
-                  className="border border-[var(--color-rule)] text-[var(--color-fg)] px-4 py-2 text-[10px] uppercase tracking-[0.22em] font-mono hover:border-[var(--color-pink)] hover:text-[var(--color-pink)] transition-colors disabled:opacity-50 disabled:cursor-wait"
                 >
                   Void match
                 </button>
-              </div>
+              </span>
             </div>
+            <p className="m-0 mt-3 mute">
+              Rewriting points for this match — affected tier snapshots will be flagged stale.
+            </p>
             {error ? (
-              <p className="mt-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-pink)] font-mono">
-                {error.code}: {error.message}
+              <p className="m-0 mt-3">
+                <span className="fn-red font-bold">{error.code}</span>
+                <span className="mute">: {error.message}</span>
               </p>
             ) : null}
           </td>

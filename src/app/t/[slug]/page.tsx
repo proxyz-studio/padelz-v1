@@ -29,12 +29,17 @@ const FORMAT_LABEL: Record<string, string> = {
   round_robin: 'Round-robin',
   bracket: 'Bracket',
 };
-
 const TYPE_LABEL: Record<string, string> = {
   open: 'Open',
   club_internal: 'Club',
   group: 'Group',
   casual: 'Casual',
+};
+const STATUS_CLS: Record<string, string> = {
+  draft: 'mute',
+  open: 'fn-green font-bold',
+  in_progress: 'fn-blue font-bold',
+  complete: 'mute',
 };
 
 export default async function TournamentDetailPage({
@@ -55,9 +60,8 @@ export default async function TournamentDetailPage({
     display_name: string;
     tier: string;
   }> = [];
-  let dbError: string | null = null;
+  let dbError = false;
 
-  // Auth state — gracefully handle no-auth (stub Clerk)
   let clerkUserId: string | null = null;
   try {
     const a = await auth();
@@ -111,7 +115,6 @@ export default async function TournamentDetailPage({
         )
         .limit(64);
 
-      // If signed in, check if the calling player is already registered + tier-eligible
       if (clerkUserId) {
         const [u] = await db
           .select({ id: users.id })
@@ -127,12 +130,8 @@ export default async function TournamentDetailPage({
           if (p) {
             currentPlayerTier = p.tier;
             const playerInt = TIER_TO_INT[p.tier as keyof typeof TIER_TO_INT];
-            if (t.tier_min && playerInt < TIER_TO_INT[t.tier_min]) {
-              tierEligible = false;
-            }
-            if (t.tier_max && playerInt > TIER_TO_INT[t.tier_max]) {
-              tierEligible = false;
-            }
+            if (t.tier_min && playerInt < TIER_TO_INT[t.tier_min]) tierEligible = false;
+            if (t.tier_max && playerInt > TIER_TO_INT[t.tier_max]) tierEligible = false;
             const [reg] = await db
               .select({ id: registrations.id })
               .from(registrations)
@@ -149,35 +148,20 @@ export default async function TournamentDetailPage({
         }
       }
     }
-  } catch (e) {
-    dbError = e instanceof Error ? e.message : String(e);
+  } catch {
+    dbError = true;
   }
 
   if (dbError) {
     return (
-      <div className="mx-auto max-w-3xl px-6 pt-16 pb-24">
-        <header className="border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-          § Tournament · /t/{slug}
-        </header>
-        <div className="mt-16 border border-dashed border-[var(--color-rule)] px-6 md:px-10 py-16 text-center">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-pink)] mb-5 font-mono">
-            Database unavailable
-          </p>
-          <h2 className="text-2xl font-light mb-4 tracking-tight">
-            Tournament page temporarily offline
-          </h2>
-          <p className="text-sm text-[var(--color-fg-muted)] max-w-md mx-auto leading-relaxed">
-            Foundation Week deployed the schema and read path; production
-            credentials land before the Phuket pilot.
-          </p>
-        </div>
+      <div className="px-4 pb-8">
+        <p className="m-0 max-w-[640px] mute">
+          Database unavailable for <span className="font-bold">/t/{slug}</span>.
+        </p>
       </div>
     );
   }
-
-  if (!row) {
-    notFound();
-  }
+  if (!row) notFound();
 
   const date = row.start_at.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -195,154 +179,91 @@ export default async function TournamentDetailPage({
       : null;
   const tierBandDisplay = tierBandLabel ?? 'All tiers';
   const tournamentClosed = row.status !== 'open' && row.status !== 'draft';
+  const statusCls = STATUS_CLS[row.status] ?? '';
 
   return (
-    <div className="mx-auto max-w-4xl px-6 pt-10 pb-24">
-      <header className="flex items-center justify-between border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-        <Link href="/t" className="hover:text-[var(--color-fg)]">
-          ← Tournaments
-        </Link>
-        <span>/t/{row.slug}</span>
-      </header>
+    <div className="px-4 pb-8">
+      <p className="m-0 mute">Tournament · /t/{row.slug}</p>
 
-      <div className="mt-12 grid grid-cols-12 gap-6 md:gap-10">
-        <div className="col-span-12 md:col-span-8">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--color-pink)] mb-4 font-mono">
-            {TYPE_LABEL[row.tournament_type] ?? row.tournament_type} ·{' '}
-            {FORMAT_LABEL[row.format] ?? row.format}
-          </p>
-          <h1 className="text-4xl md:text-6xl font-light leading-[1.05] tracking-tight">
-            {row.name}
-          </h1>
-          <p className="mt-6 text-base text-[var(--color-fg-muted)] font-mono">
-            Hosted by{' '}
-            <Link
-              href={`/c/${row.club_slug}`}
-              className="text-[var(--color-fg)] hover:text-[var(--color-pink)] transition-colors"
-            >
-              {row.club_name}
-            </Link>
-          </p>
+      <p className="m-0 mt-12 max-w-[800px]">
+        <span className="font-bold">{row.name}</span>{' '}
+        <span className="mute">
+          hosted by{' '}
+          <Link href={`/c/${row.club_slug}`}>{row.club_name}</Link>
+        </span>
+      </p>
+      <p className="m-0 mt-2 max-w-[800px] mute">
+        {TYPE_LABEL[row.tournament_type] ?? row.tournament_type} ·{' '}
+        {FORMAT_LABEL[row.format] ?? row.format} · {date} · {time} ·{' '}
+        {tierBandDisplay} ·{' '}
+        <span className={statusCls}>{row.status.replace('_', ' ')}</span>
+      </p>
 
-          <div className="mt-10">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono mb-3">
-              Registration
-            </p>
-            <RegisterButton
-              tournamentId={row.id}
-              signedIn={!!clerkUserId}
-              alreadyRegistered={alreadyRegistered}
-              tournamentClosed={tournamentClosed}
-              tierEligible={tierEligible}
-              tierBandLabel={tierBandLabel}
-            />
-            {currentPlayerTier && tierBandLabel ? (
-              <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-                Tier band {tierBandLabel} · your tier {currentPlayerTier}
-              </p>
-            ) : null}
-          </div>
+      <p className="m-0 mt-12">
+        <RegisterButton
+          tournamentId={row.id}
+          signedIn={!!clerkUserId}
+          alreadyRegistered={alreadyRegistered}
+          tournamentClosed={tournamentClosed}
+          tierEligible={tierEligible}
+          tierBandLabel={tierBandLabel}
+        />
+        {currentPlayerTier && tierBandLabel ? (
+          <span className="mute ml-3">
+            · band {tierBandLabel} · your tier {currentPlayerTier}
+          </span>
+        ) : null}
+      </p>
+
+      <div className="rule mt-20">
+        <div className="grid grid-cols-[60px_1fr_280px_56px] gap-6 mute pt-6 pb-3">
+          <span>#</span>
+          <span>Player</span>
+          <span>Tier</span>
+          <span></span>
         </div>
-
-        <aside className="col-span-12 md:col-span-4 md:border-l md:border-[var(--color-rule)] md:pl-6 mt-6 md:mt-0">
-          <h2 className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] mb-6 font-mono">
-            Details
-          </h2>
-          <dl className="space-y-3">
-            <Stat label="Date" value={date} />
-            <Stat label="Time" value={time} mono />
-            <Stat label="Tier band" value={tierBandDisplay} mono />
-            <Stat label="Status" value={row.status} mono />
-            <Stat
-              label="Registered"
-              value={`${String(roster.length).padStart(2, '0')}`}
-              mono
-            />
-          </dl>
-        </aside>
       </div>
 
-      <section className="mt-24">
-        <div className="flex items-baseline justify-between mb-8 border-b border-[var(--color-rule)] pb-3">
-          <h2 className="text-2xl md:text-3xl font-light tracking-tight">
-            Roster
-          </h2>
-          <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono tabular-nums">
-            {String(roster.length).padStart(2, '0')} players
-          </span>
+      {roster.length === 0 ? (
+        <div className="px-3 py-12 mute">
+          No players registered yet — be the first.
         </div>
-        {roster.length === 0 ? (
-          <div className="border border-dashed border-[var(--color-rule)] px-6 py-12 text-center">
-            <p className="text-sm text-[var(--color-fg-muted)] leading-relaxed">
-              No players registered yet — be the first.
-            </p>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono border-b border-[var(--color-rule)]">
-                <th className="py-3 pr-4 w-10 font-normal">#</th>
-                <th className="py-3 pr-4 font-normal">Handle</th>
-                <th className="py-3 pr-4 font-normal hidden md:table-cell">
-                  Display name
-                </th>
-                <th className="py-3 pr-4 font-normal w-28">Tier</th>
+      ) : (
+        <table className="table">
+          <colgroup>
+            <col style={{ width: '60px' }} />
+            <col />
+            <col style={{ width: '280px' }} />
+            <col className="arrow" />
+          </colgroup>
+          <tbody>
+            {roster.map((p, i) => (
+              <tr key={p.handle}>
+                <td className="mute tabular-nums no-underline">
+                  {String(i + 1).padStart(2, '0')}
+                </td>
+                <td>
+                  <Link href={`/p/${p.handle}`} className="no-underline">
+                    <span className="font-bold">{p.display_name}</span>{' '}
+                    <span className="mute">@{p.handle}</span>
+                  </Link>
+                </td>
+                <td className="mute">
+                  <TierBadge tier={p.tier} />
+                </td>
+                <td className="arrow no-underline">
+                  <Link href={`/p/${p.handle}`}>→</Link>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {roster.map((p, i) => (
-                <tr
-                  key={p.handle}
-                  className="border-b border-[var(--color-rule)] hover:bg-white/[0.02] transition-colors"
-                >
-                  <td className="py-3 pr-4 text-[var(--color-fg-muted)] tabular-nums font-mono">
-                    {String(i + 1).padStart(2, '0')}
-                  </td>
-                  <td className="py-3 pr-4 font-mono">
-                    <Link
-                      href={`/p/${p.handle}`}
-                      className="text-[var(--color-fg)] hover:text-[var(--color-pink)] transition-colors"
-                    >
-                      {p.handle}
-                    </Link>
-                  </td>
-                  <td className="py-3 pr-4 text-[var(--color-fg-muted)] hidden md:table-cell">
-                    {p.display_name}
-                  </td>
-                  <td className="py-3 pr-4">
-                    <TierBadge tier={p.tier} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-    </div>
-  );
-}
+            ))}
+          </tbody>
+        </table>
+      )}
 
-function Stat({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-1 border-b border-[var(--color-rule)] pb-3 last:border-b-0 last:pb-0">
-      <dt className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-        {label}
-      </dt>
-      <dd
-        className={`text-sm text-[var(--color-fg)] ${
-          mono ? 'font-mono capitalize' : ''
-        }`}
-      >
-        {value}
-      </dd>
+      <p className="m-0 mt-8 mute tabular-nums">
+        {String(roster.length).padStart(2, '0')} player
+        {roster.length === 1 ? '' : 's'} registered
+      </p>
     </div>
   );
 }

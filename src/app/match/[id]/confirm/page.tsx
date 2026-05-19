@@ -64,17 +64,13 @@ export default async function ConfirmScorePage({
   const meOnB = m.team_b.includes(me.id);
   if (!meOnA && !meOnB) notFound();
 
-  // Pull the pending result. If none exists, route to /submit.
   const [mr] = await db
     .select()
     .from(match_results)
     .where(eq(match_results.match_id, id))
     .limit(1);
-  if (!mr) {
-    redirect(`/match/${id}/submit`);
-  }
+  if (!mr) redirect(`/match/${id}/submit`);
 
-  // Resolve submitter player → team membership for the same-team guard UI.
   const [submitterPlayer] = await db
     .select({ id: players.id })
     .from(players)
@@ -85,7 +81,6 @@ export default async function ConfirmScorePage({
     : false;
   const sameTeamAsSubmitter = submitterOnA === meOnA;
 
-  // Labels for the score display.
   const allPlayerIds = [...m.team_a, ...m.team_b];
   const playerRows = await db
     .select({ id: players.id, handle: players.handle })
@@ -104,35 +99,43 @@ export default async function ConfirmScorePage({
   const alreadyResolved =
     mr.status === 'confirmed' || mr.status === 'admin_set' || mr.status === 'void';
 
-  return (
-    <div className="mx-auto max-w-3xl px-6 pt-10 pb-24">
-      <header className="flex items-center justify-between border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-        {t ? (
-          <Link href={`/t/${t.slug}`} className="hover:text-[var(--color-fg)]">
-            ← {t.name}
-          </Link>
-        ) : (
-          <span>Padel-Z</span>
-        )}
-        <span>/match/{id.slice(0, 8)}…/confirm</span>
-      </header>
+  const statusCls =
+    mr.status === 'pending'
+      ? 'fn-blue font-bold'
+      : mr.status === 'disputed'
+        ? 'fn-red font-bold'
+        : mr.status === 'void'
+          ? 'fn-red font-bold'
+          : mr.status === 'admin_set'
+            ? 'fn-blue font-bold'
+            : 'fn-green font-bold';
 
-      <div className="mt-16">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--color-pink)] mb-4 font-mono">
+  return (
+    <div className="px-4 pb-8">
+      <p className="m-0 mute">
+        Confirm · /match/{id.slice(0, 8)}…/confirm
+        {t ? (
+          <>
+            {' '}· <Link href={`/t/${t.slug}`}>← {t.name}</Link>
+          </>
+        ) : null}
+      </p>
+
+      <p className="m-0 mt-12 max-w-[800px]">
+        <span className="font-bold">
           {mr.status === 'pending'
-            ? 'Awaiting your call · confirm or dispute'
-            : `Result · ${mr.status}`}
-        </p>
-        <h1 className="text-4xl md:text-5xl font-light leading-tight tracking-tight mb-12">
-          {mr.status === 'pending'
-            ? 'Confirm or dispute'
+            ? 'Pending score'
             : mr.status === 'disputed'
-              ? 'Result disputed'
+              ? 'Disputed result'
               : mr.status === 'void'
                 ? 'Match voided'
-                : 'Result locked in'}
-        </h1>
+                : 'Result resolved'}
+        </span>{' '}
+        <span className="mute">·</span>{' '}
+        <span className={statusCls}>{mr.status.replace('_', ' ')}</span>
+      </p>
 
+      <div className="mt-12">
         <ConfirmScorePanel
           matchId={id}
           teamALabel={teamALabel}
@@ -142,13 +145,13 @@ export default async function ConfirmScorePage({
           sameTeamAsSubmitter={sameTeamAsSubmitter}
           alreadyResolved={alreadyResolved}
         />
-
-        <p className="mt-12 text-xs text-[var(--color-fg-muted)] font-mono max-w-md">
-          {sameTeamAsSubmitter
-            ? 'Your teammate already submitted. Only the opposing team can confirm. You can still dispute if the score is wrong.'
-            : 'Confirming writes points to the leaderboard. Disputing escalates to a club admin.'}
-        </p>
       </div>
+
+      <p className="m-0 mt-20 max-w-[800px] mute">
+        {sameTeamAsSubmitter
+          ? 'Your teammate already submitted. Only the opposing team can confirm. You can still dispute if the score is wrong.'
+          : 'Confirming writes points to the leaderboard. Disputing escalates to a club admin.'}
+      </p>
     </div>
   );
 }

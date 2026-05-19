@@ -4,17 +4,13 @@ import { db } from '@/libs/DB';
 import { clubs, players } from '@/models/Schema';
 import { PlayerProfileCard } from '@/features/profiles/components/PlayerProfileCard';
 
-// Always render per-request — schema bake-in at build time would hit the DB,
-// which fails on stub DATABASE_URL. Once Neon lands, drop to ISR (revalidate = 60).
 export const dynamic = 'force-dynamic';
 
 type Params = { handle: string };
 
 export async function generateMetadata({ params }: { params: Promise<Params> }) {
   const { handle } = await params;
-  return {
-    title: `@${handle} · Padel-Z`,
-  };
+  return { title: `@${handle} · Padel-Z` };
 }
 
 export default async function PlayerProfilePage({
@@ -26,7 +22,7 @@ export default async function PlayerProfilePage({
 
   let row: typeof players.$inferSelect | undefined;
   let club: { name: string } | undefined;
-  let dbError: string | null = null;
+  let dbError = false;
 
   try {
     const [p] = await db
@@ -43,43 +39,27 @@ export default async function PlayerProfilePage({
         .limit(1);
       club = c;
     }
-  } catch (e) {
-    dbError = e instanceof Error ? e.message : String(e);
+  } catch {
+    dbError = true;
   }
 
   if (dbError) {
     return (
-      <div className="mx-auto max-w-2xl px-6 pt-16 pb-24">
-        <header className="border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-          § Profile · @{handle}
-        </header>
-        <div className="mt-16 border border-dashed border-[var(--color-rule)] px-6 md:px-10 py-16 text-center">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-pink)] mb-5 font-mono">
-            Database unavailable
-          </p>
-          <h2 className="text-2xl font-light mb-4 tracking-tight">
-            Profile temporarily offline
-          </h2>
-          <p className="text-sm text-[var(--color-fg-muted)] max-w-md mx-auto leading-relaxed">
-            The production database isn&apos;t wired yet. Foundation Week
-            deployed the schema and read path; production credentials land
-            before the Phuket pilot.
-          </p>
-        </div>
+      <div className="px-4 pb-8">
+        <p className="m-0 max-w-[640px] mute">
+          Database unavailable for <span className="font-bold">@{handle}</span>.
+          Foundation Week deployed the schema and read path; production
+          credentials land before the Phuket pilot.
+        </p>
       </div>
     );
   }
 
-  if (!row) {
-    notFound();
-  }
+  if (!row) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl px-6 pt-10 pb-24">
-      <header className="flex items-center justify-between border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-        <span>§ Player profile</span>
-        <span>@{row.handle}</span>
-      </header>
+    <div className="px-4 pb-8">
+      <p className="m-0 mute">Player · @{row.handle}</p>
       <div className="mt-12">
         <PlayerProfileCard
           player={{

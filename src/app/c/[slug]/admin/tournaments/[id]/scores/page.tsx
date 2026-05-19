@@ -65,7 +65,6 @@ export default async function AdminScoresPage({
     .limit(1);
   if (!u) notFound();
 
-  // Admin guard: throw → 404 (don't leak admin-page existence to non-admins).
   try {
     await assertClubAdmin(u.id, club.id);
   } catch (e) {
@@ -73,8 +72,6 @@ export default async function AdminScoresPage({
     throw e;
   }
 
-  // Admin's own player_id, so we can flag rows where override would be a
-  // conflict of interest (matches the server-side guard in adminOverrideMatch).
   const [adminPlayer] = await db
     .select({ id: players.id })
     .from(players)
@@ -86,7 +83,6 @@ export default async function AdminScoresPage({
     .from(matches)
     .where(eq(matches.tournament_id, tournament.id));
 
-  // Fetch match_results in one shot.
   const resultRows = matchRows.length
     ? await db
         .select()
@@ -100,7 +96,6 @@ export default async function AdminScoresPage({
     : [];
   const resultByMatch = new Map(resultRows.map((r) => [r.match_id, r]));
 
-  // Player handles for label rendering.
   const allPlayerIds = Array.from(
     new Set(matchRows.flatMap((m) => [...m.team_a, ...m.team_b])),
   );
@@ -133,44 +128,56 @@ export default async function AdminScoresPage({
     };
   });
 
-  return (
-    <div className="mx-auto max-w-5xl px-6 pt-10 pb-24">
-      <header className="flex items-center justify-between border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-        <Link
-          href={`/t/${tournament.slug}`}
-          className="hover:text-[var(--color-fg)]"
-        >
-          ← {tournament.name}
-        </Link>
-        <span>
-          /c/{club.slug}/admin/tournaments/{id.slice(0, 8)}…/scores
-        </span>
-      </header>
+  const pendingCount = resultRows.filter((r) => r.status === 'pending').length;
+  const disputedCount = resultRows.filter((r) => r.status === 'disputed').length;
 
-      <div className="mt-12">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--color-pink)] mb-4 font-mono">
-          Club admin · score override console
-        </p>
-        <h1 className="text-3xl md:text-4xl font-light leading-tight tracking-tight mb-3">
-          {tournament.name} — match results
-        </h1>
-        <p className="text-sm text-[var(--color-fg-muted)] font-mono">
-          Hosted by {club.name} · {matchRows.length} match
-          {matchRows.length === 1 ? '' : 'es'} ·{' '}
-          {resultRows.filter((r) => r.status === 'pending').length} pending ·{' '}
-          {resultRows.filter((r) => r.status === 'disputed').length} disputed
-        </p>
+  return (
+    <div className="px-4 pb-8">
+      <p className="m-0 mute">
+        Admin · /c/{club.slug}/admin/tournaments/{id.slice(0, 8)}…/scores ·{' '}
+        <Link href={`/t/${tournament.slug}`}>← {tournament.name}</Link>
+      </p>
+
+      <p className="m-0 mt-12 max-w-[800px]">
+        <span className="font-bold">{tournament.name}</span>{' '}
+        <span className="mute">match results · hosted by {club.name}</span>
+      </p>
+      <p className="m-0 mt-2 max-w-[800px] mute">
+        {String(matchRows.length).padStart(2, '0')} match
+        {matchRows.length === 1 ? '' : 'es'}{' '}
+        {pendingCount > 0 ? (
+          <>
+            · <span className="font-bold">{String(pendingCount).padStart(2, '0')}</span>{' '}
+            pending
+          </>
+        ) : null}
+        {disputedCount > 0 ? (
+          <>
+            · <span className="fn-red font-bold">{String(disputedCount).padStart(2, '0')}</span>{' '}
+            disputed
+          </>
+        ) : null}
+      </p>
+
+      <div className="rule mt-20">
+        <div className="grid grid-cols-[1fr_280px_160px_200px_56px] gap-6 mute pt-6 pb-3">
+          <span>Match</span>
+          <span>Status</span>
+          <span>Score</span>
+          <span>Action</span>
+          <span></span>
+        </div>
       </div>
 
-      <section className="mt-12">
-        <AdminScoreTable rows={rows} />
-        <p className="mt-8 text-xs text-[var(--color-fg-muted)] font-mono max-w-2xl leading-relaxed">
-          Overriding rewrites the ledger and marks affected leaderboard snapshots
-          stale (Sunday rebuild handles them). Voiding sets both the match and
-          result to void and deletes ledger rows. You cannot override or void a
-          match you played in.
-        </p>
-      </section>
+      <AdminScoreTable rows={rows} />
+
+      <p className="m-0 mt-12 max-w-[800px] mute">
+        Overriding rewrites the ledger and marks affected tier snapshots
+        stale — Sunday's cron rebuilds them. Voiding sets both the match
+        and result to <span className="fn-red font-bold">void</span> and
+        deletes the ledger rows. You cannot override or void a match you
+        played in.
+      </p>
     </div>
   );
 }

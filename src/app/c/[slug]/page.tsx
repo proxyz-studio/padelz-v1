@@ -1,23 +1,16 @@
 import { notFound } from 'next/navigation';
 import { count, eq, and } from 'drizzle-orm';
 import { db } from '@/libs/DB';
-import {
-  club_memberships,
-  clubs,
-  tournaments,
-} from '@/models/Schema';
+import { club_memberships, clubs, tournaments } from '@/models/Schema';
 import { ClubCard } from '@/features/profiles/components/ClubCard';
 
-// Always render per-request — see /p/[handle] page for rationale.
 export const dynamic = 'force-dynamic';
 
 type Params = { slug: string };
 
 export async function generateMetadata({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
-  return {
-    title: `${slug} · Padel-Z`,
-  };
+  return { title: `${slug} · Padel-Z` };
 }
 
 export default async function ClubPage({
@@ -30,7 +23,7 @@ export default async function ClubPage({
   let row: typeof clubs.$inferSelect | undefined;
   let memberCount: number | undefined;
   let activeTournamentCount: number | undefined;
-  let dbError: string | null = null;
+  let dbError = false;
 
   try {
     const [c] = await db
@@ -39,14 +32,12 @@ export default async function ClubPage({
       .where(eq(clubs.slug, slug))
       .limit(1);
     row = c;
-
     if (c) {
       const [m] = await db
         .select({ n: count() })
         .from(club_memberships)
         .where(eq(club_memberships.club_id, c.id));
       memberCount = m?.n ?? 0;
-
       const [t] = await db
         .select({ n: count() })
         .from(tournaments)
@@ -55,43 +46,27 @@ export default async function ClubPage({
         );
       activeTournamentCount = t?.n ?? 0;
     }
-  } catch (e) {
-    dbError = e instanceof Error ? e.message : String(e);
+  } catch {
+    dbError = true;
   }
 
   if (dbError) {
     return (
-      <div className="mx-auto max-w-2xl px-6 pt-16 pb-24">
-        <header className="border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-          § Club · /c/{slug}
-        </header>
-        <div className="mt-16 border border-dashed border-[var(--color-rule)] px-6 md:px-10 py-16 text-center">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-pink)] mb-5 font-mono">
-            Database unavailable
-          </p>
-          <h2 className="text-2xl font-light mb-4 tracking-tight">
-            Club page temporarily offline
-          </h2>
-          <p className="text-sm text-[var(--color-fg-muted)] max-w-md mx-auto leading-relaxed">
-            The production database isn&apos;t wired yet. Foundation Week
-            deployed the schema and read path; production credentials land
-            before the Phuket pilot.
-          </p>
-        </div>
+      <div className="px-4 pb-8">
+        <p className="m-0 max-w-[640px] mute">
+          Database unavailable for <span className="font-bold">/c/{slug}</span>.
+          Foundation Week deployed the schema and read path; production
+          credentials land before the Phuket pilot.
+        </p>
       </div>
     );
   }
 
-  if (!row) {
-    notFound();
-  }
+  if (!row) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl px-6 pt-10 pb-24">
-      <header className="flex items-center justify-between border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
-        <span>§ Club</span>
-        <span>/c/{row.slug}</span>
-      </header>
+    <div className="px-4 pb-8">
+      <p className="m-0 mute">Club · /c/{row.slug}</p>
       <div className="mt-12">
         <ClubCard
           club={{

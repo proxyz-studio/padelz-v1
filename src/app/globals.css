@@ -1,239 +1,179 @@
 @import "tailwindcss";
 
+/* ── Padel-Z design system v2 ── (after niklasrosen.se)
+ *
+ * Discipline: ONE typeface, ONE size, ONE color. Pink Z is the only
+ * decorative color. Functional reds/greens/blues do the work — strip them
+ * and the meaning is still there. Bold = "the word that tells you what
+ * just happened or what to do next."
+ */
+
 @theme {
-  /* Palette — editorial dark + PROXYZ pink */
-  --color-bg: #0a0a0a;
-  --color-bg-elevated: #141414;
-  --color-fg: #e8e8e8;
-  --color-fg-muted: #6b6b6b;
-  --color-fg-faint: #3a3a3a;
-  --color-rule: #1f1f1f;
+  /* Neutral spine */
+  --color-bg: #ffffff;
+  --color-fg: #1a1a1a;          /* body text — soft near-black, never pure */
+  --color-fg-mute: #b7b7b7;     /* secondary, meta, descriptive context */
+  --color-rule: #ededed;        /* hairline dividers */
+
+  /* PROXYZ brand mark — reserved for the Padel-Z 'Z' only */
   --color-pink: #ff4193;
-  --color-pink-dim: #b82d6a;
 
-  /* Tier signals */
-  --color-tier-bronze: #b2773a;
-  --color-tier-silver: #a8a8a8;
-  --color-tier-gold: #d4a843;
+  /* Functional color — semantic, not decorative */
+  --color-fn-red: #dc2626;      /* destructive, cancel, dispute, void, conflict */
+  --color-fn-green: #16a34a;    /* success, win, confirm, locked-in */
+  --color-fn-blue: #2563eb;     /* data entry, admin edit, score inputs, override */
+
+  /* Tier signals — neutral text label, color only on platinum (rare achievement) */
+  --color-tier-bronze: #1a1a1a;
+  --color-tier-silver: #1a1a1a;
+  --color-tier-gold: #1a1a1a;
   --color-tier-platinum: #ff4193;
+  --color-tier-diamond: #2563eb;
 
-  /* Typography */
-  --font-mono: var(--font-plex-mono), 'IBM Plex Mono', ui-monospace, monospace;
-  --font-sans: var(--font-plex-sans), 'IBM Plex Sans', system-ui, sans-serif;
+  /* Typography — single-spec discipline */
+  --font-sans: var(--font-inter), 'Univers Next Pro', system-ui, -apple-system, sans-serif;
 }
 
-/* Force dark mode — PROXYZ identity is dark editorial */
 html {
-  color-scheme: dark;
+  color-scheme: light;
   background: var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-sans);
-  font-feature-settings: 'ss01' on, 'ss02' on, 'zero' on, 'calt' on;
+  font-feature-settings: 'ss01' on, 'cv11' on;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Mono is the accent voice: labels, data, code, timestamps */
-.font-mono,
-[data-mono],
-code,
-kbd,
-samp {
-  font-family: var(--font-mono);
+  scrollbar-gutter: stable;
 }
 
 body {
-  position: relative;
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.15;
+  letter-spacing: -0.72px;
+  font-weight: 400;
   min-height: 100vh;
-  overflow-x: hidden;
 }
 
-/* Layer 0 — subtle blueprint grid */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 90% 80% at center, black 30%, transparent 85%);
+/* The discipline classes — apply these consistently across all pages. */
+.mute { color: var(--color-fg-mute); }
+.fn-red   { color: var(--color-fn-red); }
+.fn-green { color: var(--color-fn-green); }
+.fn-blue  { color: var(--color-fn-blue); }
+.pink     { color: var(--color-pink); }
+
+/* Links default to neutral with hover-underline. Functional-color links
+ * override the color via .fn-* classes. */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
 }
 
-/* Layer 1 — gradient mesh from upper right */
-body > .mesh-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(
-      ellipse 60% 50% at 85% 0%,
-      rgba(255, 65, 147, 0.08) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 70% 60% at 15% 100%,
-      rgba(255, 65, 147, 0.04) 0%,
-      transparent 70%
-    );
+/* Hairline rule used between rows and sections. */
+.rule {
+  border-top: 1px solid var(--color-rule);
+}
+.rule-bottom {
+  border-bottom: 1px solid var(--color-rule);
 }
 
-/* Layer 2 — grain overlay */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+/* Universal table treatment — every list of records on the app uses this. */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--color-rule);
+  font-weight: 400;
+  vertical-align: top;
+}
+.table thead th {
+  color: var(--color-fg-mute);
+  border-bottom: 1px solid var(--color-rule);
+  padding-top: 0;
+}
+.table td.arrow,
+.table th.arrow {
+  text-align: right;
+  padding-right: 0;
+  width: 56px;
+}
+.table tbody tr:hover td {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.table tbody tr:hover td.score,
+.table tbody tr:hover td.year,
+.table tbody tr:hover td.no-underline { text-decoration: none; }
+.table tr.row-mute td { color: var(--color-fg-mute); }
+
+/* Tabular numerals — only for score cells. */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Inline score input — used by submit/admin override forms. */
+.score-input {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-fg);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  padding: 0 4px 4px;
+  text-align: center;
+  width: 80px;
+  -moz-appearance: textfield;
+}
+.score-input::-webkit-outer-spin-button,
+.score-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.score-input:focus { outline: none; border-bottom-color: var(--color-fn-blue); }
+
+/* Bare button — looks like a link, behaves like a button. */
+.btn-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+.btn-link:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.btn-link:disabled {
+  cursor: wait;
+  opacity: 0.5;
 }
 
-/* Content sits above background layers */
-header,
-main,
-footer,
-nav,
-.ticker {
-  position: relative;
-  z-index: 2;
-}
-
-/* Selection */
+/* Selection — uses the brand pink subtly. */
 ::selection {
   background: var(--color-pink);
   color: var(--color-bg);
 }
 
-/* Focus state */
+/* Focus ring */
 *:focus-visible {
-  outline: 1px solid var(--color-pink);
+  outline: 1px solid var(--color-fn-blue);
   outline-offset: 4px;
 }
 
-/* Tabular numerals */
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Ticker marquee — pure CSS, respects reduced motion */
-@keyframes ticker-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-.ticker-track {
-  display: flex;
-  width: max-content;
-  animation: ticker-scroll 60s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ticker-track {
-    animation: none;
-  }
-}
-
-/* Platinum tier shimmer */
-@keyframes shimmer {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 65, 147, 0);
-  }
-  50% {
-    box-shadow: 0 0 12px 0 rgba(255, 65, 147, 0.35);
-  }
-}
-
-.shimmer-platinum {
-  animation: shimmer 2.4s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .shimmer-platinum {
-    animation: none;
-  }
-}
-
-/* Pulse dot for active module */
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.pulse-dot {
-  animation: pulse-dot 1.6s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pulse-dot {
-    animation: none;
-  }
-}
-
-/* Section running line — connects § markers */
-.section-rail {
-  position: relative;
-}
-.section-rail::before {
-  content: '';
-  position: absolute;
-  left: -1px;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    var(--color-rule) 5%,
-    var(--color-rule) 95%,
-    transparent 100%
-  );
-}
-
-/* SSR-safe entrance animations — pure CSS, auto-honors prefers-reduced-motion */
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fade-up-blur {
-  from {
-    opacity: 0;
-    transform: translateY(36px);
-    filter: blur(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.anim-fade-up {
-  animation: fade-up 0.6s ease-out both;
-}
-
-.anim-fade-up-blur {
-  animation: fade-up-blur 0.9s ease-out both;
-}
-
-.anim-fade-in {
-  animation: fade-in 0.6s ease-out both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .anim-fade-up,
-  .anim-fade-up-blur,
-  .anim-fade-in {
-    animation: none;
+/* Mobile — drop font size proportionally, narrower padding. */
+@media (max-width: 720px) {
+  body {
+    font-size: 18px;
+    letter-spacing: -0.4px;
+    line-height: 1.2;
   }
 }

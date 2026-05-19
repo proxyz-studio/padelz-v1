@@ -28,7 +28,6 @@ export default async function SubmitScorePage({
 }) {
   const { id } = await params;
 
-  // Auth — unauthed user redirects to sign-in, returning here after.
   let clerkUserId: string | null = null;
   try {
     const a = await auth();
@@ -47,8 +46,6 @@ export default async function SubmitScorePage({
     .limit(1);
   if (!m) notFound();
 
-  // Participation gate — non-participants get 404 to avoid leaking match
-  // existence (spec §4.7 step 2).
   const [u] = await db
     .select({ id: users.id })
     .from(users)
@@ -67,17 +64,13 @@ export default async function SubmitScorePage({
   const onTeamB = m.team_b.includes(me.id);
   if (!onTeamA && !onTeamB) notFound();
 
-  // If a result already exists, route to /confirm instead.
   const [existing] = await db
     .select({ status: match_results.status })
     .from(match_results)
     .where(eq(match_results.match_id, id))
     .limit(1);
-  if (existing) {
-    redirect(`/match/${id}/confirm`);
-  }
+  if (existing) redirect(`/match/${id}/confirm`);
 
-  // Build human labels for each team from player handles.
   const allPlayerIds = [...m.team_a, ...m.team_b];
   const playerRows = await db
     .select({ id: players.id, handle: players.handle })
@@ -94,38 +87,36 @@ export default async function SubmitScorePage({
     .limit(1);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 pt-10 pb-24">
-      <header className="flex items-center justify-between border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] font-mono">
+    <div className="px-4 pb-8">
+      <p className="m-0 mute">
+        Submit · /match/{id.slice(0, 8)}…/submit
         {t ? (
-          <Link href={`/t/${t.slug}`} className="hover:text-[var(--color-fg)]">
-            ← {t.name}
-          </Link>
-        ) : (
-          <span>Padel-Z</span>
-        )}
-        <span>/match/{id.slice(0, 8)}…/submit</span>
-      </header>
+          <>
+            {' '}· <Link href={`/t/${t.slug}`}>← {t.name}</Link>
+          </>
+        ) : null}
+      </p>
 
-      <div className="mt-16">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--color-pink)] mb-4 font-mono">
-          Score submission · pending opponent confirmation
-        </p>
-        <h1 className="text-4xl md:text-5xl font-light leading-tight tracking-tight mb-12">
-          Submit final score
-        </h1>
+      <p className="m-0 mt-12 max-w-[800px]">
+        <span className="font-bold">Final score</span>{' '}
+        <span className="mute">
+          · enter the result of this match · first submission wins
+        </span>
+      </p>
 
+      <div className="mt-12">
         <SubmitScoreForm
           matchId={id}
           teamALabel={teamALabel}
           teamBLabel={teamBLabel}
         />
-
-        <p className="mt-12 text-xs text-[var(--color-fg-muted)] font-mono max-w-md">
-          First submission wins. After you submit, the opposing team has
-          48 hours to confirm or dispute — until then the leaderboard does
-          not move.
-        </p>
       </div>
+
+      <p className="m-0 mt-20 max-w-[800px] mute">
+        First submission wins. After you submit, the opposing team has
+        48 hours to confirm or dispute — until then the leaderboard does
+        not move.
+      </p>
     </div>
   );
 }

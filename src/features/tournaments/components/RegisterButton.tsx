@@ -30,41 +30,34 @@ export function RegisterButton({
 
   if (!signedIn) {
     return (
-      <Link
-        href="/sign-in"
-        className="inline-flex items-center gap-2 border border-[var(--color-pink)] bg-[var(--color-pink)] text-[var(--color-bg)] px-5 py-3 text-xs uppercase tracking-[0.18em] font-mono hover:bg-transparent hover:text-[var(--color-pink)] transition-colors"
-      >
-        Sign in to register →
+      <Link className="fn-green font-bold" href="/sign-in">
+        Sign in to register <span className="mute">→</span>
       </Link>
     );
   }
 
   if (alreadyRegistered) {
     return (
-      <div className="inline-flex items-center gap-2 border border-[var(--color-tier-gold)] text-[var(--color-tier-gold)] px-5 py-3 text-xs uppercase tracking-[0.18em] font-mono">
-        ● Registered
-      </div>
+      <span className="fn-green font-bold">
+        Registered <span className="mute">· see you on court</span>
+      </span>
     );
   }
 
   if (tournamentClosed) {
-    return (
-      <div className="inline-flex items-center gap-2 border border-[var(--color-fg-faint)] text-[var(--color-fg-faint)] px-5 py-3 text-xs uppercase tracking-[0.18em] font-mono cursor-not-allowed">
-        Registration closed
-      </div>
-    );
+    return <span className="mute">Registration closed</span>;
   }
 
   if (!tierEligible) {
     return (
-      <div
-        className="inline-flex items-center gap-2 border border-[var(--color-fg-faint)] text-[var(--color-fg-muted)] px-5 py-3 text-xs uppercase tracking-[0.18em] font-mono cursor-not-allowed"
+      <span
+        className="fn-red font-bold"
         title={
           tierBandLabel ? `Tier band: ${tierBandLabel}` : 'Outside tier band'
         }
       >
         Outside tier band
-      </div>
+      </span>
     );
   }
 
@@ -86,37 +79,28 @@ export function RegisterButton({
 
   if (result.kind === 'success') {
     return (
-      <div className="inline-flex items-center gap-2 border border-[var(--color-pink)] bg-[var(--color-pink)]/10 text-[var(--color-pink)] px-5 py-3 text-xs uppercase tracking-[0.18em] font-mono">
-        ● Registered — see you on court
-      </div>
+      <span className="fn-green font-bold">
+        Registered <span className="mute">· see you on court</span>
+      </span>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <span>
       <button
         type="button"
         onClick={handleClick}
         disabled={pending}
-        className="inline-flex items-center gap-2 border border-[var(--color-pink)] bg-[var(--color-pink)] text-[var(--color-bg)] px-5 py-3 text-xs uppercase tracking-[0.18em] font-mono hover:bg-transparent hover:text-[var(--color-pink)] transition-colors disabled:opacity-50 disabled:cursor-wait"
+        className="btn-link fn-green font-bold"
       >
-        {pending ? (
-          <>
-            <span className="inline-block h-2 w-2 rounded-full bg-current animate-pulse" />
-            <span>Registering…</span>
-          </>
-        ) : (
-          <>
-            <span>Register for this tournament</span>
-            <span aria-hidden>→</span>
-          </>
-        )}
-      </button>
+        {pending ? 'Registering…' : 'Register for this tournament'}
+      </button>{' '}
+      <span className="mute">→</span>
       {result.kind === 'error' ? (
-        <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-pink)] font-mono">
-          {result.code}: {result.message}
-        </p>
+        <span className="fn-red font-bold ml-3">
+          {result.code}: <span className="mute font-normal">{result.message}</span>
+        </span>
       ) : null}
-    </div>
+    </span>
   );
 }

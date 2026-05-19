@@ -6,64 +6,45 @@ export const metadata = {
 
 export default function SignInPage() {
   return (
-    <div className="mx-auto max-w-md px-6 pt-16 pb-24">
-      <header className="flex items-center justify-between border-b border-[var(--color-rule)] pb-3 text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)]">
-        <span>§ Authentication</span>
-        <span>M1 · pending</span>
-      </header>
-
-      <h1 className="mt-16 text-4xl md:text-5xl font-light tracking-tight">
-        Sign <span className="text-[var(--color-pink)]">in</span>
-      </h1>
-
-      <p className="mt-6 text-sm text-[var(--color-fg-muted)] leading-relaxed">
-        Authentication wires through Clerk in milestone M1. This is the styled
-        placeholder — the API is built, the keys arrive with the Phuket pilot kickoff.
+    <div className="px-4 pb-8">
+      <p className="m-0 max-w-[640px]">
+        Sign in to Padel-Z. Authentication wires through Clerk in
+        milestone M1 — keys land with the Phuket pilot kickoff. The form
+        below is the styled placeholder.
       </p>
 
-      <div className="mt-12 space-y-8">
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-muted)] mb-3"
-          >
-            Email
-          </label>
+      <div className="rule mt-20">
+        <div className="grid grid-cols-[80px_1fr_280px_160px_56px] gap-6 mute pt-6 pb-3">
+          <span>—</span>
+          <span>Email</span>
+          <span>Method</span>
+          <span>Status</span>
+          <span></span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-[80px_1fr_280px_160px_56px] gap-6 items-baseline rule-bottom px-3 py-4">
+        <span>2026</span>
+        <span>
           <input
-            id="email"
             type="email"
             placeholder="you@example.com"
             disabled
-            className="w-full bg-transparent border-b border-[var(--color-rule)] py-3 text-base placeholder:text-[var(--color-fg-faint)] focus:border-[var(--color-pink)] focus:outline-none transition-colors disabled:cursor-not-allowed"
+            className="score-input fn-blue text-left w-full"
+            style={{ width: '100%', textAlign: 'left' }}
           />
-        </div>
-
-        <button
-          type="button"
-          disabled
-          className="w-full border border-[var(--color-fg-faint)] text-[var(--color-fg-faint)] px-5 py-3 text-xs uppercase tracking-[0.18em] cursor-not-allowed"
-        >
-          Continue → pending M1
-        </button>
-
-        <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-fg-faint)] text-center">
-          Form disabled · live in M1
-        </p>
+        </span>
+        <span className="mute">Magic link · Clerk</span>
+        <span className="mute">
+          Pending <span className="fn-blue font-bold">M1</span>
+        </span>
+        <span className="text-right mute">—</span>
       </div>
 
-      <div className="mt-20 border-t border-[var(--color-rule)] pt-6 flex items-center justify-between text-[10px] uppercase tracking-[0.22em]">
-        <Link
-          href="/"
-          className="text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-colors"
-        >
-          ← Homepage
-        </Link>
-        <Link
-          href="/leaderboard"
-          className="text-[var(--color-fg-muted)] hover:text-[var(--color-pink)] transition-colors"
-        >
-          Leaderboard →
-        </Link>
+      <div className="mute mt-3 px-3 flex gap-8 flex-wrap">
+        <Link href="/" className="mute">← Homepage</Link>
+        <Link href="/leaderboard" className="mute">Leaderboard</Link>
+        <span>Form disabled · live in M1</span>
       </div>
     </div>
   );
