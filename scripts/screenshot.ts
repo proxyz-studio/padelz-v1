@@ -11,6 +11,8 @@ const targets = [
   { path: '/leaderboard', name: 'leaderboard' },
   { path: '/p/seed-player-2', name: 'player-profile' },
   { path: '/c/destination-padel', name: 'club-page' },
+  { path: '/t', name: 'tournaments-list' },
+  { path: '/t/saturday-open-week-1', name: 'tournament-detail' },
 ];
 
 const viewports = [

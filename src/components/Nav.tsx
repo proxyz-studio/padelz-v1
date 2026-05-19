@@ -37,12 +37,12 @@ export function Nav() {
           >
             Leaderboard
           </Link>
-          <span
-            className="text-[var(--color-fg-faint)] cursor-not-allowed hidden sm:inline"
-            title="Wires in milestone M2"
+          <Link
+            href="/t"
+            className="text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-colors hidden sm:inline"
           >
             Tournaments
-          </span>
+          </Link>
           <Link
             href="/sign-in"
             className="group inline-flex items-center gap-1 text-[var(--color-pink)] hover:opacity-80 transition-opacity"
