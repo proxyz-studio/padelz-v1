@@ -51,6 +51,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: { domains: ['public.blob.vercel-storage.com', 'img.clerk.com'] },
+  // Allow Playwright's 127.0.0.1 origin to connect to the dev server's HMR
+  // WebSocket. Without this, Turbopack's HMR client fails the cross-origin
+  // check and React never completes hydration in Playwright runs.
+  allowedDevOrigins: ['127.0.0.1'],
   async headers() {
     return [
       {

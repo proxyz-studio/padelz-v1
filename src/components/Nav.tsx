@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import MobileNavToggle from './MobileNavToggle';
 
 export function Nav() {
   return (
@@ -16,9 +17,12 @@ export function Nav() {
         <Link href="/about" className="hidden md:block mute">
           About
         </Link>
-        <Link href="/sign-in" className="text-right">
+        <Link href="/sign-in" className="hidden md:block text-right">
           Login <span className="mute">→</span>
         </Link>
+        <div className="md:hidden text-right">
+          <MobileNavToggle />
+        </div>
       </div>
     </header>
   );
