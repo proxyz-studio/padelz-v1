@@ -48,3 +48,4 @@ next-env.d.ts
 HANDOFF.md
 
 .superpowers/
+/public/sw.js
