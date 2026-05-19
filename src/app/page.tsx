@@ -68,15 +68,58 @@ export default async function HomePage() {
           No tournaments yet. The first Phuket Open lands soon.
         </div>
       ) : (
-        <table className="table">
-          <colgroup>
-            <col style={{ width: '80px' }} />
-            <col />
-            <col style={{ width: '280px' }} />
-            <col style={{ width: '160px' }} />
-            <col className="arrow" />
-          </colgroup>
-          <tbody>
+        <>
+          <div className="desktop-only">
+            <table className="table">
+              <colgroup>
+                <col style={{ width: '80px' }} />
+                <col />
+                <col style={{ width: '280px' }} />
+                <col style={{ width: '160px' }} />
+                <col className="arrow" />
+              </colgroup>
+              <tbody>
+                {upcoming.map((t) => {
+                  const year = t.start_at.getUTCFullYear();
+                  const statusCls =
+                    t.status === 'open'
+                      ? 'fn-green font-bold'
+                      : t.status === 'in_progress'
+                        ? 'fn-blue font-bold'
+                        : t.status === 'complete'
+                          ? 'mute'
+                          : '';
+                  return (
+                    <tr key={t.slug}>
+                      <td className="year no-underline">{year}</td>
+                      <td>
+                        <Link href={`/t/${t.slug}`} className="no-underline">
+                          {t.name}
+                        </Link>
+                      </td>
+                      <td className="mute">
+                        {FORMAT_LABEL[t.format] ?? t.format} ·{' '}
+                        {TYPE_LABEL[t.tournament_type] ?? t.tournament_type} ·{' '}
+                        <span className={statusCls}>
+                          {STATUS_LABEL[t.status] ?? t.status}
+                        </span>
+                      </td>
+                      <td>
+                        <Link href={`/c/${t.club_slug}`} className="mute no-underline">
+                          {t.club_name}
+                        </Link>
+                      </td>
+                      <td className="arrow no-underline">
+                        <Link href={`/t/${t.slug}`}>→</Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mobile-only">
             {upcoming.map((t) => {
               const year = t.start_at.getUTCFullYear();
               const statusCls =
@@ -88,33 +131,22 @@ export default async function HomePage() {
                       ? 'mute'
                       : '';
               return (
-                <tr key={t.slug}>
-                  <td className="year no-underline">{year}</td>
-                  <td>
-                    <Link href={`/t/${t.slug}`} className="no-underline">
-                      {t.name}
-                    </Link>
-                  </td>
-                  <td className="mute">
-                    {FORMAT_LABEL[t.format] ?? t.format} ·{' '}
-                    {TYPE_LABEL[t.tournament_type] ?? t.tournament_type} ·{' '}
-                    <span className={statusCls}>
-                      {STATUS_LABEL[t.status] ?? t.status}
-                    </span>
-                  </td>
-                  <td>
-                    <Link href={`/c/${t.club_slug}`} className="mute no-underline">
-                      {t.club_name}
-                    </Link>
-                  </td>
-                  <td className="arrow no-underline">
-                    <Link href={`/t/${t.slug}`}>→</Link>
-                  </td>
-                </tr>
+                <Link key={t.slug} href={`/t/${t.slug}`} className="no-underline" style={{ display: 'block', padding: '16px 0', borderBottom: '1px solid var(--color-rule)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
+                    <strong>{t.name}</strong>
+                    <span className={statusCls} style={{ fontSize: 14 }}>{STATUS_LABEL[t.status] ?? t.status}</span>
+                  </div>
+                  <div className="mute" style={{ fontSize: 14, marginTop: 4 }}>
+                    {year} · {FORMAT_LABEL[t.format] ?? t.format} · {TYPE_LABEL[t.tournament_type] ?? t.tournament_type}
+                  </div>
+                  <div className="mute" style={{ fontSize: 14, marginTop: 4 }}>
+                    {t.start_at.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} · {t.club_name}
+                  </div>
+                </Link>
               );
             })}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
     </div>
   );
