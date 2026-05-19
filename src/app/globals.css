@@ -176,4 +176,42 @@ a:hover {
     letter-spacing: -0.4px;
     line-height: 1.2;
   }
+
+  /* iOS HIG minimum tap targets */
+  .arrow,
+  .btn-link,
+  a.no-underline {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Bare-input score fields */
+  .score-input {
+    min-height: 44px;
+    font-size: 18px;
+  }
+
+  /* Default table → single column. Per-route variants override with their own grid. */
+  .table {
+    display: block;
+  }
+  .table > * {
+    display: block;
+  }
+  .table .row,
+  .table > div {
+    display: block;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  /* Mobile-only show/hide helpers — used by per-route variants */
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
+}
+
+/* Hide mobile-only blocks on desktop */
+@media (min-width: 721px) {
+  .mobile-only { display: none !important; }
 }
