@@ -1,0 +1,42 @@
+# PROXYZ Studio dependency hygiene — weekly Dependabot PRs.
+# Aligns with SMB Web-Service/05-Security A06 mitigation.
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
+      timezone: 'Asia/Bangkok'
+    open-pull-requests-limit: 5
+    labels:
+      - 'dependencies'
+    groups:
+      production-dependencies:
+        dependency-type: 'production'
+        update-types:
+          - 'minor'
+          - 'patch'
+      development-dependencies:
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+    # Hold majors for human review (potential breaking changes)
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
+      timezone: 'Asia/Bangkok'
+    open-pull-requests-limit: 3
+    labels:
+      - 'dependencies'
+      - 'github-actions'

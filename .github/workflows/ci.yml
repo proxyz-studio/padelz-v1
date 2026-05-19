@@ -32,6 +32,24 @@ jobs:
       - run: npm ci
       - run: npm run test
 
+  audit:
+    # Fail the build on CRITICAL CVEs. Aligns with SMB Web-Service/05-Security A06.
+    #
+    # Currently set to critical (not high) because of one open high-severity finding:
+    # drizzle-orm <0.45.2 (GHSA-gpj5-g38j-94v9, SQL injection via unescaped identifiers).
+    # The CVE only fires when user input ends up as a table/column name; Padel-Z never
+    # passes user input as an identifier. A proper upgrade to drizzle-orm 0.45+ (paired
+    # with drizzle-kit 0.31+) is tracked as follow-up — see SECURITY.md.
+    # Re-tighten this gate to --audit-level=high once that lands.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - name: npm audit (critical+)
+        run: npm audit --audit-level=critical
+
   test-integration:
     runs-on: ubuntu-latest
     needs: [check-types, lint, test-unit]
