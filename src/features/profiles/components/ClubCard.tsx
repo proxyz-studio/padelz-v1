@@ -22,7 +22,7 @@ export function ClubCard({
 
   return (
     <article>
-      <div className="rule">
+      <div className="rule desktop-only">
         <div className="grid grid-cols-[80px_1fr_280px_160px_56px] gap-6 mute pt-6 pb-3">
           <span>—</span>
           <span>Club</span>
@@ -32,7 +32,7 @@ export function ClubCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-[80px_1fr_280px_160px_56px] gap-6 items-baseline rule-bottom px-3 py-4">
+      <div className="grid grid-cols-[80px_1fr_280px_160px_56px] gap-6 items-baseline rule-bottom px-3 py-4 desktop-only">
         <span>—</span>
         <span>
           <span className="font-bold">{club.name}</span>{' '}
@@ -52,6 +52,23 @@ export function ClubCard({
           {String(activeCount).padStart(2, '0')}
         </span>
         <span></span>
+      </div>
+
+      <div className="mobile-only" style={{ padding: '16px 0', borderBottom: '1px solid var(--color-rule)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
+          <span>
+            <span className="font-bold">{club.name}</span>{' '}
+            <span className="mute">/c/{club.slug}</span>
+          </span>
+          <span className={activeCount > 0 ? 'fn-green font-bold' : 'mute'} style={{ fontSize: 14, whiteSpace: 'nowrap' }}>
+            {String(activeCount).padStart(2, '0')} active
+          </span>
+        </div>
+        <div className="mute" style={{ fontSize: 14, marginTop: 4 }}>
+          {club.city}
+          {club.court_count !== null ? ` · ${String(club.court_count).padStart(2, '0')} courts` : ''}
+          {memberCount !== undefined ? ` · ${String(memberCount).padStart(2, '0')} members` : ''}
+        </div>
       </div>
 
       {club.description ? (
