@@ -27,7 +27,7 @@ export function PlayerProfileCard({
 
   return (
     <article>
-      <div className="rule">
+      <div className="rule desktop-only">
         <div className="grid grid-cols-[80px_1fr_280px_160px_56px] gap-6 mute pt-6 pb-3">
           <span>—</span>
           <span>Player</span>
@@ -37,7 +37,7 @@ export function PlayerProfileCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-[80px_1fr_280px_160px_56px] gap-6 items-baseline rule-bottom px-3 py-4">
+      <div className="grid grid-cols-[80px_1fr_280px_160px_56px] gap-6 items-baseline rule-bottom px-3 py-4 desktop-only">
         <span>—</span>
         <span>
           {isRedacted ? (
@@ -61,6 +61,28 @@ export function PlayerProfileCard({
         </span>
         <span className="mute">{monthYear ?? '—'}</span>
         <span></span>
+      </div>
+
+      <div className="mobile-only" style={{ padding: '16px 0', borderBottom: '1px solid var(--color-rule)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
+          <span>
+            {isRedacted ? (
+              <span className="mute">[redacted]</span>
+            ) : (
+              <>
+                <span className="font-bold">{player.display_name}</span>{' '}
+                <span className="mute">@{player.handle}</span>
+                {player.verified ? <span className="pink font-bold"> · verified</span> : null}
+              </>
+            )}
+          </span>
+          <span className="mute" style={{ fontSize: 14 }}>
+            <TierBadge tier={player.tier} />
+          </span>
+        </div>
+        <div className="mute" style={{ fontSize: 14, marginTop: 4 }}>
+          {homeClubName ?? 'no home club'}{monthYear ? ` · ${monthYear}` : ''}
+        </div>
       </div>
 
       {bio && !isRedacted ? (
