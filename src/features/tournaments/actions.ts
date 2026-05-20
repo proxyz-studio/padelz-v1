@@ -4,13 +4,14 @@ import { auth } from '@clerk/nextjs/server';
 import { customAlphabet } from 'nanoid';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/libs/DB';
 import { rateLimit } from '@/libs/RateLimit';
 import {
   brackets,
+  clubs,
   club_memberships,
   matches,
   players,
@@ -18,6 +19,7 @@ import {
   tournaments,
   users,
 } from '@/models/Schema';
+import { assertClubAdmin, ForbiddenError } from '@/libs/Authz';
 import { TIERS, TIER_TO_INT } from '@/features/profiles/types';
 import type { Result } from '@/features/scoring/types';
 import { createNotification } from '@/features/notifications/actions';
@@ -134,6 +136,96 @@ export async function createTournament(
     // revalidatePath only works inside a request — tests/scripts run outside
   }
   return { success: true, data: { tournament_id: t.id, slug: t.slug } };
+}
+
+// ── publishTournament ────────────────────────────────────────────────────────
+
+const PublishSchema = z.object({ tournament_id: z.string().uuid() });
+
+/**
+ * Transition a tournament from 'draft' to 'open'. Once 'open', players can
+ * register and the tournament is visible on the public /t list. Requires the
+ * caller to be a club admin.
+ */
+export async function publishTournament(
+  input: z.input<typeof PublishSchema>,
+  clerkUserId?: string,
+): Promise<Result<{ tournament_id: string }>> {
+  const userId = clerkUserId ?? (await auth()).userId;
+  if (!userId) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Sign in required' },
+    };
+  }
+
+  const parsed = PublishSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION', message: parsed.error.message },
+    };
+  }
+
+  const [u] = await db
+    .select()
+    .from(users)
+    .where(eq(users.clerk_id, userId))
+    .limit(1);
+  if (!u) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'User not synced' },
+    };
+  }
+
+  const [t] = await db
+    .select()
+    .from(tournaments)
+    .where(eq(tournaments.id, parsed.data.tournament_id))
+    .limit(1);
+  if (!t) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Tournament not found' },
+    };
+  }
+
+  try {
+    await assertClubAdmin(u.id, t.club_id);
+  } catch (err) {
+    if (err instanceof ForbiddenError) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: err.message },
+      };
+    }
+    throw err;
+  }
+
+  if (t.status !== 'draft') {
+    return {
+      success: false,
+      error: {
+        code: 'INVALID_STATUS',
+        message: 'Only draft tournaments can be published',
+      },
+    };
+  }
+
+  await db
+    .update(tournaments)
+    .set({ status: 'open' })
+    .where(eq(tournaments.id, t.id));
+
+  try {
+    revalidatePath('/t');
+    revalidatePath(`/t/${t.slug}`);
+  } catch {
+    // outside request scope
+  }
+
+  return { success: true, data: { tournament_id: t.id } };
 }
 
 // ── registerForTournament ────────────────────────────────────────────────────

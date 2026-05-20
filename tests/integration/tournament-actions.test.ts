@@ -12,6 +12,7 @@ import {
 } from '@/models/Schema';
 import {
   createTournament,
+  publishTournament,
   registerForTournament,
 } from '@/features/tournaments/actions';
 
@@ -244,5 +245,120 @@ describe('registerForTournament', () => {
     const second = await registerForTournament({ tournament_id: tournamentId }, clerkId);
     expect(second.success).toBe(false);
     if (!second.success) expect(second.error.code).toBe('ALREADY_REGISTERED');
+  });
+});
+
+describe('publishTournament', () => {
+  it('club admin transitions draft → open', async () => {
+    const clerkId = `c-pub-${uuidv7().slice(0, 8)}`;
+    const [u] = await db
+      .insert(users)
+      .values({ clerk_id: clerkId, email: `${clerkId}@x` })
+      .returning();
+    const [c] = await db
+      .insert(clubs)
+      .values({ slug: `pub-${clerkId.slice(-8)}`, name: 'Pub Test' })
+      .returning();
+    await db
+      .insert(club_memberships)
+      .values({ user_id: u.id, club_id: c.id, role: 'admin' });
+
+    const created = await createTournament(
+      {
+        club_id: c.id,
+        name: 'Sat Open',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000).toISOString(),
+        tier_min: null,
+        tier_max: null,
+      },
+      clerkId,
+    );
+    if (!created.success) throw new Error('setup failed');
+
+    const r = await publishTournament(
+      { tournament_id: created.data.tournament_id },
+      clerkId,
+    );
+
+    expect(r.success).toBe(true);
+
+    const [t] = await db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, created.data.tournament_id));
+    expect(t.status).toBe('open');
+  });
+
+  it('returns INVALID_STATUS when called on a tournament not in draft', async () => {
+    // Setup an "open" tournament and try to publish it again
+    const clerkId = `c-pub2-${uuidv7().slice(0, 8)}`;
+    const [u] = await db
+      .insert(users)
+      .values({ clerk_id: clerkId, email: `${clerkId}@x` })
+      .returning();
+    const [c] = await db
+      .insert(clubs)
+      .values({ slug: `pub2-${clerkId.slice(-8)}`, name: 'Pub2 Test' })
+      .returning();
+    await db
+      .insert(club_memberships)
+      .values({ user_id: u.id, club_id: c.id, role: 'admin' });
+    const [t] = await db
+      .insert(tournaments)
+      .values({
+        slug: `already-open-${clerkId.slice(-8)}`,
+        club_id: c.id,
+        name: 'Already Open',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000),
+        status: 'open',
+        created_by: u.id,
+      })
+      .returning();
+
+    const r = await publishTournament({ tournament_id: t.id }, clerkId);
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('INVALID_STATUS');
+  });
+
+  it('returns FORBIDDEN for non-admin caller', async () => {
+    const adminClerkId = `c-pub3a-${uuidv7().slice(0, 8)}`;
+    const otherClerkId = `c-pub3b-${uuidv7().slice(0, 8)}`;
+    const [admin] = await db
+      .insert(users)
+      .values({ clerk_id: adminClerkId, email: `${adminClerkId}@x` })
+      .returning();
+    await db
+      .insert(users)
+      .values({ clerk_id: otherClerkId, email: `${otherClerkId}@x` });
+    const [c] = await db
+      .insert(clubs)
+      .values({ slug: `pub3-${otherClerkId.slice(-8)}`, name: 'Pub3 Test' })
+      .returning();
+    await db
+      .insert(club_memberships)
+      .values({ user_id: admin.id, club_id: c.id, role: 'admin' });
+    const [t] = await db
+      .insert(tournaments)
+      .values({
+        slug: `t-pub3-${otherClerkId.slice(-8)}`,
+        club_id: c.id,
+        name: 'Draft Tournament',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000),
+        status: 'draft',
+        created_by: admin.id,
+      })
+      .returning();
+
+    const r = await publishTournament({ tournament_id: t.id }, otherClerkId);
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('FORBIDDEN');
   });
 });
