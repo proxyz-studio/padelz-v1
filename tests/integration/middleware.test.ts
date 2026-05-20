@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach, afterAll } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 
 vi.mock('@clerk/nextjs/server', async () => {
@@ -25,6 +25,10 @@ describe('middleware', () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
+  });
+
+  afterAll(() => {
+    vi.unmock('@clerk/nextjs/server');
   });
 
   it('redirects anonymous visitors at / to /coming-soon when NEXT_PUBLIC_BETA_OPEN=false', async () => {

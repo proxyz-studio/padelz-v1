@@ -34,9 +34,9 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const path = req.nextUrl.pathname;
 
   // 1. Beta gate: anonymous visitors at / when NEXT_PUBLIC_BETA_OPEN is not 'true'
-  if (isPublicLanding(req)) {
+  if (isPublicLanding(req) && process.env.NEXT_PUBLIC_BETA_OPEN !== 'true') {
     const { userId } = await auth();
-    if (!userId && process.env.NEXT_PUBLIC_BETA_OPEN !== 'true') {
+    if (!userId) {
       const url = req.nextUrl.clone();
       url.pathname = '/coming-soon';
       return NextResponse.redirect(url);

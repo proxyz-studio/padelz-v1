@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Requires NEXT_PUBLIC_BETA_OPEN !== 'true' in the dev server process. This is
+// the default for local dev (no env var set). After Chunk 4 flip, update or
+// remove this test.
 test('anonymous visitor at / is redirected to /coming-soon (gate off)', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/coming-soon/);
@@ -7,8 +10,10 @@ test('anonymous visitor at / is redirected to /coming-soon (gate off)', async ({
 
 test('public routes remain reachable', async ({ page }) => {
   for (const path of ['/leaderboard', '/t', '/sign-in']) {
-    await page.goto(path);
+    const response = await page.goto(path);
+    expect(response?.status()).toBeLessThan(400);
     await expect(page).not.toHaveURL(/coming-soon/);
+    await expect(page.locator('main')).toBeAttached();
   }
 });
 
