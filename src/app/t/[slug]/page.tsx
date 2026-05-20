@@ -4,7 +4,9 @@ import { auth } from '@clerk/nextjs/server';
 import { and, eq } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import {
+  brackets,
   clubs,
+  matches,
   players,
   registrations,
   tournaments,
@@ -12,6 +14,8 @@ import {
 } from '@/models/Schema';
 import { TierBadge } from '@/components/TierBadge';
 import { RegisterButton } from '@/features/tournaments/components/RegisterButton';
+import { BracketView } from '@/features/tournaments/components/BracketView';
+import type { BracketData } from '@/features/tournaments/bracket';
 import { TIER_TO_INT } from '@/features/profiles/types';
 
 export const dynamic = 'force-dynamic';
@@ -56,11 +60,16 @@ export default async function TournamentDetailPage({
       })
     | undefined;
   let roster: Array<{
+    player_id: string;
     handle: string;
     display_name: string;
     tier: string;
   }> = [];
   let dbError = false;
+  let bracketData: BracketData | null = null;
+  let playerMap: Map<string, { handle: string; display_name: string }> = new Map();
+  let matchMap: Map<string, { id: string; team_a: string[]; team_b: string[]; result_status: 'pending'; score_a: null; score_b: null }> = new Map();
+  let currentUserPlayerId: string | null = null;
 
   let clerkUserId: string | null = null;
   try {
@@ -101,6 +110,7 @@ export default async function TournamentDetailPage({
       row = t;
       roster = await db
         .select({
+          player_id: registrations.player_id,
           handle: players.handle,
           display_name: players.display_name,
           tier: players.tier,
@@ -147,6 +157,43 @@ export default async function TournamentDetailPage({
           }
         }
       }
+
+      const [bracketRow] = await db
+        .select()
+        .from(brackets)
+        .where(eq(brackets.tournament_id, t.id))
+        .limit(1);
+
+      const matchRows = bracketRow
+        ? await db.select().from(matches).where(eq(matches.tournament_id, t.id))
+        : [];
+
+      playerMap = new Map(
+        roster.map((r) => [r.player_id, { handle: r.handle, display_name: r.display_name }]),
+      );
+
+      matchMap = new Map(
+        matchRows.map((m) => [m.id, {
+          id: m.id,
+          team_a: m.team_a,
+          team_b: m.team_b,
+          result_status: 'pending' as const,
+          score_a: null,
+          score_b: null,
+        }]),
+      );
+
+      if (clerkUserId) {
+        const [pl] = await db
+          .select({ id: players.id })
+          .from(players)
+          .innerJoin(users, eq(users.id, players.user_id))
+          .where(eq(users.clerk_id, clerkUserId))
+          .limit(1);
+        currentUserPlayerId = pl?.id ?? null;
+      }
+
+      bracketData = bracketRow ? (bracketRow.data as BracketData) : null;
     }
   } catch {
     dbError = true;
@@ -264,6 +311,22 @@ export default async function TournamentDetailPage({
         {String(roster.length).padStart(2, '0')} player
         {roster.length === 1 ? '' : 's'} registered
       </p>
+
+      {bracketData ? (
+        <section style={{ marginTop: '2em' }}>
+          <p className="mute">Bracket</p>
+          <BracketView
+            bracket={bracketData}
+            matches={matchMap}
+            players={playerMap}
+            currentUserPlayerId={currentUserPlayerId}
+          />
+        </section>
+      ) : (
+        <p className="mute" style={{ marginTop: '2em' }}>
+          Bracket not yet generated. Registration closes when the admin locks it.
+        </p>
+      )}
     </div>
   );
 }
