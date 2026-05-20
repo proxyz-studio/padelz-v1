@@ -61,18 +61,17 @@ function MatchRow({
   const isDisputed = info?.result_status === 'disputed';
   const aWins = info?.score_a != null && info?.score_b != null && info.score_a > info.score_b;
   const bWins = info?.score_a != null && info?.score_b != null && info.score_b > info.score_a;
-  const scoreCell =
-    info?.score_a != null && info?.score_b != null ? (
-      <>
-        <span className={aWins ? 'fn-green font-bold' : ''}>{info.score_a}</span>
-        {' – '}
-        <span className={bWins ? 'fn-green font-bold' : ''}>{info.score_b}</span>
-      </>
-    ) : isDisputed ? (
-      <span className="fn-red font-bold">Disputed</span>
-    ) : (
-      <span className="mute">pending</span>
-    );
+  const scoreCell = isDisputed ? (
+    <span className="fn-red font-bold">Disputed</span>
+  ) : info?.score_a != null && info?.score_b != null ? (
+    <>
+      <span className={aWins ? 'fn-green font-bold' : ''}>{info.score_a}</span>
+      {' – '}
+      <span className={bWins ? 'fn-green font-bold' : ''}>{info.score_b}</span>
+    </>
+  ) : (
+    <span className="mute">pending</span>
+  );
 
   return (
     <tr>
@@ -116,12 +115,14 @@ function MatchCard({
       <p className="mute">vs</p>
       <p>{teamLabel(players, m.team_b)}</p>
       <div style={{ marginTop: '0.5em' }}>
-        {info?.score_a != null && info?.score_b != null ? (
-          <span>
-            {info.score_a} – {info.score_b}
-          </span>
-        ) : info?.result_status === 'disputed' ? (
+        {info?.result_status === 'disputed' ? (
           <span className="fn-red font-bold">Disputed</span>
+        ) : info?.score_a != null && info?.score_b != null ? (
+          <span>
+            <span className={info.score_a > info.score_b ? 'fn-green font-bold' : ''}>{info.score_a}</span>
+            {' – '}
+            <span className={info.score_b > info.score_a ? 'fn-green font-bold' : ''}>{info.score_b}</span>
+          </span>
         ) : (
           <span className="mute">pending</span>
         )}
@@ -155,14 +156,14 @@ export function BracketView({ bracket, matches, players, currentUserPlayerId }: 
             </tr>
           </thead>
           <tbody>
-            {bracket.matches.map((m, i) => (
-              <MatchRow key={i} m={m} matches={matches} players={players} currentUserPlayerId={currentUserPlayerId} />
+            {bracket.matches.map((m) => (
+              <MatchRow key={m.index} m={m} matches={matches} players={players} currentUserPlayerId={currentUserPlayerId} />
             ))}
           </tbody>
         </table>
         <div className="mobile-only">
-          {bracket.matches.map((m, i) => (
-            <MatchCard key={i} m={m} matches={matches} players={players} currentUserPlayerId={currentUserPlayerId} />
+          {bracket.matches.map((m) => (
+            <MatchCard key={m.index} m={m} matches={matches} players={players} currentUserPlayerId={currentUserPlayerId} />
           ))}
         </div>
       </>
@@ -170,6 +171,8 @@ export function BracketView({ bracket, matches, players, currentUserPlayerId }: 
   }
 
   // RoundBracketData: americano | mexicano
+  // TS does not narrow BracketData through the compound `||` early-return guard above,
+  // so the cast is required here even though logically only RoundBracketData can reach this point.
   const roundBracket = bracket as RoundBracketData;
   return (
     <>
@@ -186,14 +189,14 @@ export function BracketView({ bracket, matches, players, currentUserPlayerId }: 
               </tr>
             </thead>
             <tbody>
-              {round.matches.map((m: BracketMatch, i: number) => (
-                <MatchRow key={i} m={m} matches={matches} players={players} currentUserPlayerId={currentUserPlayerId} />
+              {round.matches.map((m: BracketMatch) => (
+                <MatchRow key={m.index} m={m} matches={matches} players={players} currentUserPlayerId={currentUserPlayerId} />
               ))}
             </tbody>
           </table>
           <div className="mobile-only">
-            {round.matches.map((m: BracketMatch, i: number) => (
-              <MatchCard key={i} m={m} matches={matches} players={players} currentUserPlayerId={currentUserPlayerId} />
+            {round.matches.map((m: BracketMatch) => (
+              <MatchCard key={m.index} m={m} matches={matches} players={players} currentUserPlayerId={currentUserPlayerId} />
             ))}
           </div>
         </section>
