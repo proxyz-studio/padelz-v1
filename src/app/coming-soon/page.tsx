@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function ComingSoonPage() {
   return (
-    <main className="px-4 pb-8">
+    <div className="px-4 pb-8">
       <div style={{ paddingTop: '32vh' }}>
         <p>
           Padel-<span className="pink font-bold">Z</span>. Phuket&apos;s padel community.
@@ -19,6 +19,6 @@ export default function ComingSoonPage() {
           <Link href="/sign-in">Sign in →</Link>
         </p>
       </div>
-    </main>
+    </div>
   );
 }
