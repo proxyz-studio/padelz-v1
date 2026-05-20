@@ -46,7 +46,12 @@ export default async function NewTournamentPage({
       name: String(formData.get('name')),
       format: String(formData.get('format')) as 'americano' | 'mexicano' | 'round_robin' | 'bracket',
       tournament_type: String(formData.get('tournament_type')) as 'open' | 'club_internal' | 'group' | 'casual',
-      start_at: new Date(String(formData.get('start_at'))).toISOString(),
+      start_at: (() => {
+        const v = formData.get('start_at');
+        if (!v || typeof v !== 'string') return '';
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? '' : d.toISOString();
+      })(),
       tier_min: (String(formData.get('tier_min') ?? '') || null) as 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | null,
       tier_max: (String(formData.get('tier_max') ?? '') || null) as 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | null,
     });
@@ -63,7 +68,7 @@ export default async function NewTournamentPage({
       </p>
       <p style={{ marginTop: '0.5em' }}>New tournament</p>
       <p className="mute">Lands as draft. Publish from the next screen.</p>
-      <hr className="rule" style={{ margin: '1.5em 0' }} />
+      <div className="rule" style={{ margin: '1.5em 0' }} />
       <TournamentForm mode="create" action={action} clubId={club.id} error={error} />
     </div>
   );
