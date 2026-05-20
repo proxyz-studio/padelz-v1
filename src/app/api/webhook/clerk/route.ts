@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     return new Response('rate limited', {
       status: 429,
       headers: {
-        'Retry-After': String(Math.ceil((limit.reset - Date.now()) / 1000)),
+        'Retry-After': String(Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000))),
       },
     });
   }
