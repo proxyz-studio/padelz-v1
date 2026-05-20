@@ -530,4 +530,41 @@ describe('updateTournament', () => {
     if (r.success) return;
     expect(r.error.code).toBe('FORBIDDEN');
   });
+
+  it('returns VALIDATION when tier_min > tier_max', async () => {
+    const clerkId = `c-upd5-${uuidv7().slice(0, 8)}`;
+    const [u] = await db.insert(users).values({ clerk_id: clerkId, email: `${clerkId}@x` }).returning();
+    const [c] = await db.insert(clubs).values({ slug: `upd5-${clerkId.slice(-8)}`, name: 'Upd5' }).returning();
+    await db.insert(club_memberships).values({ user_id: u.id, club_id: c.id, role: 'admin' });
+    const created = await createTournament(
+      {
+        club_id: c.id,
+        name: 'Tier Test',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000).toISOString(),
+        tier_min: null,
+        tier_max: null,
+      },
+      clerkId,
+    );
+    if (!created.success) throw new Error('setup');
+
+    const r = await updateTournament(
+      {
+        tournament_id: created.data.tournament_id,
+        name: 'Tier Test',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000).toISOString(),
+        tier_min: 'gold',
+        tier_max: 'silver',
+      },
+      clerkId,
+    );
+
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('VALIDATION');
+  });
 });

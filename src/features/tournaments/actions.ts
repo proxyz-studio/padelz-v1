@@ -477,7 +477,9 @@ export async function updateTournament(
   try {
     revalidatePath('/t');
     revalidatePath(`/t/${t.slug}`);
-  } catch {}
+  } catch {
+    // outside request scope
+  }
 
   return { success: true, data: { tournament_id: t.id } };
 }
