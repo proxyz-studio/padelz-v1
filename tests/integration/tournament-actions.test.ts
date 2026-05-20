@@ -13,6 +13,7 @@ import {
 } from '@/models/Schema';
 import {
   createTournament,
+  deleteTournament,
   publishTournament,
   registerForTournament,
   updateTournament,
@@ -566,5 +567,105 @@ describe('updateTournament', () => {
     expect(r.success).toBe(false);
     if (r.success) return;
     expect(r.error.code).toBe('VALIDATION');
+  });
+});
+
+describe('deleteTournament', () => {
+  it('club admin deletes a draft tournament', async () => {
+    const clerkId = `c-del-${uuidv7().slice(0, 8)}`;
+    const [u] = await db.insert(users).values({ clerk_id: clerkId, email: `${clerkId}@x` }).returning();
+    const [c] = await db.insert(clubs).values({ slug: `del-${clerkId.slice(-8)}`, name: 'Del' }).returning();
+    await db.insert(club_memberships).values({ user_id: u.id, club_id: c.id, role: 'admin' });
+    const [t] = await db.insert(tournaments).values({
+      slug: `t-del-${clerkId.slice(-8)}`,
+      club_id: c.id,
+      name: 'Draft',
+      format: 'round_robin',
+      tournament_type: 'club_internal',
+      start_at: new Date(Date.now() + 86_400_000),
+      status: 'draft',
+      created_by: u.id,
+    }).returning();
+
+    const r = await deleteTournament({ tournament_id: t.id }, clerkId);
+    expect(r.success).toBe(true);
+
+    const after = await db.select().from(tournaments).where(eq(tournaments.id, t.id));
+    expect(after.length).toBe(0);
+  });
+
+  it('returns INVALID_STATUS when tournament is in_progress', async () => {
+    const clerkId = `c-del2-${uuidv7().slice(0, 8)}`;
+    const [u] = await db.insert(users).values({ clerk_id: clerkId, email: `${clerkId}@x` }).returning();
+    const [c] = await db.insert(clubs).values({ slug: `del2-${clerkId.slice(-8)}`, name: 'Del2' }).returning();
+    await db.insert(club_memberships).values({ user_id: u.id, club_id: c.id, role: 'admin' });
+    const [t] = await db.insert(tournaments).values({
+      slug: `t-del2-${clerkId.slice(-8)}`,
+      club_id: c.id,
+      name: 'Locked',
+      format: 'round_robin',
+      tournament_type: 'club_internal',
+      start_at: new Date(Date.now() + 86_400_000),
+      status: 'in_progress',
+      created_by: u.id,
+    }).returning();
+
+    const r = await deleteTournament({ tournament_id: t.id }, clerkId);
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('INVALID_STATUS');
+  });
+
+  it('returns HAS_MATCHES when tournament has matches', async () => {
+    const clerkId = `c-del3-${uuidv7().slice(0, 8)}`;
+    const [u] = await db.insert(users).values({ clerk_id: clerkId, email: `${clerkId}@x` }).returning();
+    const [c] = await db.insert(clubs).values({ slug: `del3-${clerkId.slice(-8)}`, name: 'Del3' }).returning();
+    await db.insert(club_memberships).values({ user_id: u.id, club_id: c.id, role: 'admin' });
+    const [t] = await db.insert(tournaments).values({
+      slug: `t-del3-${clerkId.slice(-8)}`,
+      club_id: c.id,
+      name: 'Has Matches',
+      format: 'round_robin',
+      tournament_type: 'club_internal',
+      start_at: new Date(Date.now() + 86_400_000),
+      status: 'open',
+      created_by: u.id,
+    }).returning();
+    const [p1] = await db.insert(players).values({ user_id: u.id, handle: `p1-${clerkId.slice(-8)}`, display_name: 'P1', tier: 'bronze' }).returning();
+    await db.insert(matches).values({
+      tournament_id: t.id,
+      team_a: [p1.id],
+      team_b: [p1.id],
+      status: 'scheduled',
+    });
+
+    const r = await deleteTournament({ tournament_id: t.id }, clerkId);
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('HAS_MATCHES');
+  });
+
+  it('returns FORBIDDEN for non-admin', async () => {
+    const adminClerkId = `c-del4a-${uuidv7().slice(0, 8)}`;
+    const otherClerkId = `c-del4b-${uuidv7().slice(0, 8)}`;
+    const [admin] = await db.insert(users).values({ clerk_id: adminClerkId, email: `${adminClerkId}@x` }).returning();
+    await db.insert(users).values({ clerk_id: otherClerkId, email: `${otherClerkId}@x` });
+    const [c] = await db.insert(clubs).values({ slug: `del4-${otherClerkId.slice(-8)}`, name: 'Del4' }).returning();
+    await db.insert(club_memberships).values({ user_id: admin.id, club_id: c.id, role: 'admin' });
+    const [t] = await db.insert(tournaments).values({
+      slug: `t-del4-${otherClerkId.slice(-8)}`,
+      club_id: c.id,
+      name: 'Locked from others',
+      format: 'round_robin',
+      tournament_type: 'club_internal',
+      start_at: new Date(Date.now() + 86_400_000),
+      status: 'draft',
+      created_by: admin.id,
+    }).returning();
+
+    const r = await deleteTournament({ tournament_id: t.id }, otherClerkId);
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('FORBIDDEN');
   });
 });

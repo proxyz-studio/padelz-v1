@@ -484,6 +484,75 @@ export async function updateTournament(
   return { success: true, data: { tournament_id: t.id } };
 }
 
+// ── deleteTournament ─────────────────────────────────────────────────────────
+
+const DeleteSchema = z.object({ tournament_id: z.string().uuid() });
+
+/**
+ * Drop a tournament. Allowed only when status ∈ {draft, open} AND zero rows
+ * in the matches table for this tournament. FK cascade clears registrations
+ * and brackets rows. Requires club admin.
+ */
+export async function deleteTournament(
+  input: z.input<typeof DeleteSchema>,
+  clerkUserId?: string,
+): Promise<Result<{ deleted: true }>> {
+  const userId = clerkUserId ?? (await auth()).userId;
+  if (!userId) {
+    return { success: false, error: { code: 'UNAUTHORIZED', message: 'Sign in required' } };
+  }
+
+  const parsed = DeleteSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.message } };
+  }
+
+  const [u] = await db.select().from(users).where(eq(users.clerk_id, userId)).limit(1);
+  if (!u) {
+    return { success: false, error: { code: 'UNAUTHORIZED', message: 'User not synced' } };
+  }
+
+  const [t] = await db.select().from(tournaments).where(eq(tournaments.id, parsed.data.tournament_id)).limit(1);
+  if (!t) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Tournament not found' } };
+  }
+
+  try {
+    await assertClubAdmin(u.id, t.club_id);
+  } catch (err) {
+    if (err instanceof ForbiddenError) {
+      return { success: false, error: { code: 'FORBIDDEN', message: err.message } };
+    }
+    throw err;
+  }
+
+  if (t.status !== 'draft' && t.status !== 'open') {
+    return { success: false, error: { code: 'INVALID_STATUS', message: 'Delete only allowed for draft or open tournaments' } };
+  }
+
+  const [{ value: matchCount }] = await db
+    .select({ value: sql<number>`count(*)::int` })
+    .from(matches)
+    .where(eq(matches.tournament_id, t.id));
+  if (matchCount > 0) {
+    return { success: false, error: { code: 'HAS_MATCHES', message: 'Cannot delete a tournament with matches recorded' } };
+  }
+
+  // Look up club slug BEFORE deleting (FK cascade clears related rows but we need the slug for revalidate)
+  const [club] = await db.select({ slug: clubs.slug }).from(clubs).where(eq(clubs.id, t.club_id)).limit(1);
+
+  await db.delete(tournaments).where(eq(tournaments.id, t.id));
+
+  try {
+    revalidatePath('/t');
+    if (club) revalidatePath(`/c/${club.slug}`);
+  } catch {
+    // outside request scope
+  }
+
+  return { success: true, data: { deleted: true } };
+}
+
 // ── generateBracket ──────────────────────────────────────────────────────────
 
 const GenerateBracketSchema = z.object({ tournament_id: z.string().uuid() });
