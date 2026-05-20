@@ -35,7 +35,7 @@ export function TournamentForm({ mode, action, initial, clubId, tournamentId, er
 
       <p className="mute">Name</p>
       <input
-        className="score-input"
+        className="form-input"
         type="text"
         name="name"
         defaultValue={initial?.name ?? ''}
@@ -45,7 +45,7 @@ export function TournamentForm({ mode, action, initial, clubId, tournamentId, er
       />
 
       <p className="mute" style={{ marginTop: '1em' }}>Format</p>
-      <select className="score-input" name="format" defaultValue={initial?.format ?? 'round_robin'} required>
+      <select className="form-input" name="format" defaultValue={initial?.format ?? 'round_robin'} required>
         <option value="round_robin">round robin</option>
         <option value="americano">americano</option>
         <option value="mexicano">mexicano</option>
@@ -53,7 +53,7 @@ export function TournamentForm({ mode, action, initial, clubId, tournamentId, er
       </select>
 
       <p className="mute" style={{ marginTop: '1em' }}>Type</p>
-      <select className="score-input" name="tournament_type" defaultValue={initial?.tournament_type ?? 'open'} required>
+      <select className="form-input" name="tournament_type" defaultValue={initial?.tournament_type ?? 'open'} required>
         <option value="open">open</option>
         <option value="club_internal">club internal</option>
         <option value="group">group</option>
@@ -62,7 +62,7 @@ export function TournamentForm({ mode, action, initial, clubId, tournamentId, er
 
       <p className="mute" style={{ marginTop: '1em' }}>Start</p>
       <input
-        className="score-input"
+        className="form-input"
         type="datetime-local"
         name="start_at"
         defaultValue={initial ? isoToLocal(initial.start_at) : ''}
@@ -70,7 +70,7 @@ export function TournamentForm({ mode, action, initial, clubId, tournamentId, er
       />
 
       <p className="mute" style={{ marginTop: '1em' }}>Tier min (optional)</p>
-      <select className="score-input" name="tier_min" defaultValue={initial?.tier_min ?? ''}>
+      <select className="form-input" name="tier_min" defaultValue={initial?.tier_min ?? ''}>
         <option value="">any</option>
         {TIERS.map((t) => (
           <option key={t} value={t}>{t}</option>
@@ -78,7 +78,7 @@ export function TournamentForm({ mode, action, initial, clubId, tournamentId, er
       </select>
 
       <p className="mute" style={{ marginTop: '1em' }}>Tier max (optional)</p>
-      <select className="score-input" name="tier_max" defaultValue={initial?.tier_max ?? ''}>
+      <select className="form-input" name="tier_max" defaultValue={initial?.tier_max ?? ''}>
         <option value="">any</option>
         {TIERS.map((t) => (
           <option key={t} value={t}>{t}</option>
