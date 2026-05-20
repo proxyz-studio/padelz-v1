@@ -120,7 +120,7 @@ export default async function AdminTournamentDetailPage({
             </form>
           </>
         )}
-        {t.status === 'open' && regs.length < 2 && (
+        {t.status === 'open' && regs.length < 2 && matchCount === 0 && (
           <>
             <p className="mute">Need at least 2 registered players to generate bracket</p>
             <a href={`/c/${slug}/admin/tournaments/${t.id}/edit`} className="btn-link" style={{ marginRight: '1.5em', marginTop: '0.5em', display: 'inline-block' }}>Edit →</a>
@@ -132,7 +132,7 @@ export default async function AdminTournamentDetailPage({
         {t.status === 'in_progress' && (
           <>
             <a href={`/t/${t.slug}`} className="btn-link" style={{ marginRight: '1.5em' }}>View bracket →</a>
-            <a href={`/c/${slug}/admin/tournaments/${t.id}/scores`} className="btn-link fn-blue">Manage scores →</a>
+            <a href={`/c/${slug}/admin/tournaments/${t.id}/scores`} className="btn-link fn-blue font-bold">Manage scores →</a>
           </>
         )}
         {t.status === 'complete' && (
@@ -140,7 +140,7 @@ export default async function AdminTournamentDetailPage({
         )}
         {/* Defensive fallback: an open tournament with matches recorded is architecturally impossible
             (generateBracket transitions status atomically) but if data drifts, surface a hint. */}
-        {t.status === 'open' && regs.length >= 2 && matchCount > 0 && (
+        {t.status === 'open' && matchCount > 0 && (
           <p className="mute">State inconsistency: tournament is open but matches exist. Contact support.</p>
         )}
       </div>
