@@ -9,6 +9,8 @@ const isProtected = createRouteMatcher([
   '/c/:slug/admin(.*)',
 ]);
 
+const isPublicLanding = createRouteMatcher(['/']);
+
 // Rate-limit rules — first match wins. Tight on public abuse vectors, loose on
 // reads. Authenticated endpoints will be keyed by user-id once M1 ships actual
 // API routes; for now everything is keyed by source IP.
@@ -31,7 +33,17 @@ function clientIp(req: NextRequest): string {
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   const path = req.nextUrl.pathname;
 
-  // 1. Rate-limit BEFORE auth. A flood of unauthenticated traffic shouldn't
+  // 1. Beta gate: anonymous visitors at / when NEXT_PUBLIC_BETA_OPEN is not 'true'
+  if (isPublicLanding(req)) {
+    const { userId } = await auth();
+    if (!userId && process.env.NEXT_PUBLIC_BETA_OPEN !== 'true') {
+      const url = req.nextUrl.clone();
+      url.pathname = '/coming-soon';
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // 2. Rate-limit BEFORE auth. A flood of unauthenticated traffic shouldn't
   // get to spend Clerk's auth-check CPU. Returns 429 + Retry-After on bust.
   const rule = RATE_RULES.find((r) => r.match(path));
   if (rule) {
@@ -51,10 +63,10 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     }
   }
 
-  // 2. Clerk auth gate
+  // 3. Clerk auth gate
   if (isProtected(req)) auth.protect();
 
-  // 3. Request-id propagation for log correlation
+  // 4. Request-id propagation for log correlation
   const incoming = req.headers.get('x-request-id');
   const requestId =
     incoming && /^[a-z0-9-]{8,64}$/.test(incoming) ? incoming : uuidv7();

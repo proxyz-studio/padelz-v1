@@ -8,7 +8,8 @@ async function blockClerkNetwork(page: import('@playwright/test').Page) {
   await page.route('**/clerk.accounts.dev/**', (route) => route.abort());
 }
 
-test('home page renders Padelz heading', async ({ page }) => {
+// gated behind NEXT_PUBLIC_BETA_OPEN until launch — re-enable after Chunk 4 flip
+test.skip('home page renders Padelz heading', async ({ page }) => {
   await blockClerkNetwork(page);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: /padelz/i })).toBeVisible();

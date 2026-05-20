@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('service worker cache versioning', () => {
   test('cache name contains current build ID', async ({ page, request }) => {
-    await page.goto('/');
+    // Use /coming-soon (public route) to trigger SW registration — / redirects to /coming-soon when gate is closed
+    await page.goto('/coming-soon');
     // Wait for SW to register
     await page.waitForFunction(async () => {
       if (!('serviceWorker' in navigator)) return false;
