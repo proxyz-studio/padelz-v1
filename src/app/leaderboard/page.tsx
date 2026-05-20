@@ -1,29 +1,54 @@
 import Link from 'next/link';
+import { eq } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import { players } from '@/models/Schema';
 import { TierBadge } from '@/components/TierBadge';
+import { TierFilter } from '@/features/leaderboard/components/TierFilter';
+import type { Tier } from '@/features/profiles/types';
 
 export const dynamic = 'force-dynamic';
 
 type Row = { handle: string; name: string; tier: string };
 
+type SearchParams = Promise<{ tier?: string }>;
+
 export const metadata = {
   title: 'Leaderboard · Padel-Z',
 };
 
-export default async function LeaderboardPage() {
+export default async function LeaderboardPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { tier: tierParam } = await searchParams;
+  const validTiers: Tier[] = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
+  const currentTier: Tier | null = validTiers.includes(tierParam as Tier) ? (tierParam as Tier) : null;
+
   let rows: Row[] = [];
   let dbError = false;
 
   try {
-    rows = await db
-      .select({
-        handle: players.handle,
-        name: players.display_name,
-        tier: players.tier,
-      })
-      .from(players)
-      .limit(50);
+    if (currentTier) {
+      rows = await db
+        .select({
+          handle: players.handle,
+          name: players.display_name,
+          tier: players.tier,
+        })
+        .from(players)
+        .where(eq(players.tier, currentTier))
+        .limit(50);
+    } else {
+      rows = await db
+        .select({
+          handle: players.handle,
+          name: players.display_name,
+          tier: players.tier,
+        })
+        .from(players)
+        .limit(50);
+    }
   } catch {
     dbError = true;
   }
@@ -39,6 +64,8 @@ export default async function LeaderboardPage() {
         registration order.
       </p>
 
+      <TierFilter currentTier={currentTier} basePath="/leaderboard" />
+
       <div className="rule mt-20 desktop-only">
         <div className="grid grid-cols-[60px_1fr_280px_56px] gap-6 mute pt-6 pb-3">
           <span>Rank</span>
@@ -53,6 +80,8 @@ export default async function LeaderboardPage() {
           Database unavailable. Foundation Week deployed the schema and
           read path; production credentials land before the Phuket pilot.
         </div>
+      ) : rows.length === 0 && currentTier !== null ? (
+        <p className="mute" style={{ marginTop: '2em' }}>No players at this tier yet.</p>
       ) : rows.length === 0 ? (
         <div className="px-3 py-12 mute">
           No active players yet. Registration opens with the first

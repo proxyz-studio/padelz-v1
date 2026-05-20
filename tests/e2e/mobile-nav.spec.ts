@@ -11,7 +11,8 @@ test.describe('mobile nav', () => {
 
   test('hamburger toggles overlay with nav links', async ({ page }) => {
     await blockClerkNetwork(page);
-    await page.goto('/', { waitUntil: 'load' });
+    // Use /coming-soon (public route) — / redirects to /coming-soon when gate is closed
+    await page.goto('/coming-soon', { waitUntil: 'load' });
     const toggle = page.getByRole('button', { name: /open menu/i });
     await expect(toggle).toBeVisible();
 
@@ -32,7 +33,8 @@ test.describe('mobile nav', () => {
 
   test('hamburger is at least 44pt tap target', async ({ page }) => {
     await blockClerkNetwork(page);
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    // Use /coming-soon (public route) — / redirects to /coming-soon when gate is closed
+    await page.goto('/coming-soon', { waitUntil: 'domcontentloaded' });
     const toggle = page.getByRole('button', { name: /open menu/i });
     const box = await toggle.boundingBox();
     expect(box!.width).toBeGreaterThanOrEqual(44);

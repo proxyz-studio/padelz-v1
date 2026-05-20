@@ -3,9 +3,20 @@ import { Webhook } from 'svix';
 import { Env } from '@/libs/Env';
 import { handleClerkEvent } from '@/features/auth/webhook';
 import { logger } from '@/libs/Logger';
+import { rateLimit } from '@/libs/RateLimit';
 
 export async function POST(req: Request) {
   const h = await headers();
+  const ip = h.get('x-forwarded-for')?.split(',')[0].trim() ?? '0.0.0.0';
+  const limit = await rateLimit(ip, 'webhook');
+  if (!limit.success) {
+    return new Response('rate limited', {
+      status: 429,
+      headers: {
+        'Retry-After': String(Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000))),
+      },
+    });
+  }
   const svix_id = h.get('svix-id');
   const svix_timestamp = h.get('svix-timestamp');
   const svix_signature = h.get('svix-signature');

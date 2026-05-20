@@ -4,13 +4,14 @@ import { auth } from '@clerk/nextjs/server';
 import { customAlphabet } from 'nanoid';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/libs/DB';
 import { rateLimit } from '@/libs/RateLimit';
 import {
   brackets,
+  clubs,
   club_memberships,
   matches,
   players,
@@ -18,6 +19,7 @@ import {
   tournaments,
   users,
 } from '@/models/Schema';
+import { assertClubAdmin, ForbiddenError } from '@/libs/Authz';
 import { TIERS, TIER_TO_INT } from '@/features/profiles/types';
 import type { Result } from '@/features/scoring/types';
 import { createNotification } from '@/features/notifications/actions';
@@ -134,6 +136,96 @@ export async function createTournament(
     // revalidatePath only works inside a request — tests/scripts run outside
   }
   return { success: true, data: { tournament_id: t.id, slug: t.slug } };
+}
+
+// ── publishTournament ────────────────────────────────────────────────────────
+
+const PublishSchema = z.object({ tournament_id: z.string().uuid() });
+
+/**
+ * Transition a tournament from 'draft' to 'open'. Once 'open', players can
+ * register and the tournament is visible on the public /t list. Requires the
+ * caller to be a club admin.
+ */
+export async function publishTournament(
+  input: z.input<typeof PublishSchema>,
+  clerkUserId?: string,
+): Promise<Result<{ tournament_id: string }>> {
+  const userId = clerkUserId ?? (await auth()).userId;
+  if (!userId) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Sign in required' },
+    };
+  }
+
+  const parsed = PublishSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION', message: parsed.error.message },
+    };
+  }
+
+  const [u] = await db
+    .select()
+    .from(users)
+    .where(eq(users.clerk_id, userId))
+    .limit(1);
+  if (!u) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'User not synced' },
+    };
+  }
+
+  const [t] = await db
+    .select()
+    .from(tournaments)
+    .where(eq(tournaments.id, parsed.data.tournament_id))
+    .limit(1);
+  if (!t) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Tournament not found' },
+    };
+  }
+
+  try {
+    await assertClubAdmin(u.id, t.club_id);
+  } catch (err) {
+    if (err instanceof ForbiddenError) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: err.message },
+      };
+    }
+    throw err;
+  }
+
+  if (t.status !== 'draft') {
+    return {
+      success: false,
+      error: {
+        code: 'INVALID_STATUS',
+        message: 'Only draft tournaments can be published',
+      },
+    };
+  }
+
+  await db
+    .update(tournaments)
+    .set({ status: 'open' })
+    .where(eq(tournaments.id, t.id));
+
+  try {
+    revalidatePath('/t');
+    revalidatePath(`/t/${t.slug}`);
+  } catch {
+    // outside request scope
+  }
+
+  return { success: true, data: { tournament_id: t.id } };
 }
 
 // ── registerForTournament ────────────────────────────────────────────────────
@@ -299,6 +391,168 @@ export async function registerForTournament(
   return { success: true, data: { registration_id: reg.id } };
 }
 
+// ── updateTournament ─────────────────────────────────────────────────────────
+
+const UpdateSchema = z.object({
+  tournament_id: z.string().uuid(),
+  name: z.string().min(3).max(120),
+  format: z.enum(['americano', 'mexicano', 'round_robin', 'bracket']),
+  tournament_type: z.enum(['open', 'club_internal', 'group', 'casual']),
+  start_at: z.string().datetime(),
+  tier_min: z.enum(TIERS).nullable(),
+  tier_max: z.enum(TIERS).nullable(),
+});
+
+/**
+ * Edit tournament metadata. Allowed only when status ∈ {draft, open} AND
+ * zero rows in matches table for this tournament. Requires club admin.
+ */
+export async function updateTournament(
+  input: z.input<typeof UpdateSchema>,
+  clerkUserId?: string,
+): Promise<Result<{ tournament_id: string }>> {
+  const userId = clerkUserId ?? (await auth()).userId;
+  if (!userId) {
+    return { success: false, error: { code: 'UNAUTHORIZED', message: 'Sign in required' } };
+  }
+
+  const parsed = UpdateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.message } };
+  }
+
+  const [u] = await db.select().from(users).where(eq(users.clerk_id, userId)).limit(1);
+  if (!u) {
+    return { success: false, error: { code: 'UNAUTHORIZED', message: 'User not synced' } };
+  }
+
+  const [t] = await db.select().from(tournaments).where(eq(tournaments.id, parsed.data.tournament_id)).limit(1);
+  if (!t) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Tournament not found' } };
+  }
+
+  try {
+    await assertClubAdmin(u.id, t.club_id);
+  } catch (err) {
+    if (err instanceof ForbiddenError) {
+      return { success: false, error: { code: 'FORBIDDEN', message: err.message } };
+    }
+    throw err;
+  }
+
+  if (t.status !== 'draft' && t.status !== 'open') {
+    return { success: false, error: { code: 'INVALID_STATUS', message: 'Edit only allowed for draft or open tournaments' } };
+  }
+
+  // Zero rows in matches table for this tournament
+  const [{ value: matchCount }] = await db
+    .select({ value: sql<number>`count(*)::int` })
+    .from(matches)
+    .where(eq(matches.tournament_id, t.id));
+  if (matchCount > 0) {
+    return { success: false, error: { code: 'INVALID_STATUS', message: 'Cannot edit a tournament with matches recorded' } };
+  }
+
+  // Validate tier band
+  if (
+    parsed.data.tier_min &&
+    parsed.data.tier_max &&
+    TIER_TO_INT[parsed.data.tier_min] > TIER_TO_INT[parsed.data.tier_max]
+  ) {
+    return { success: false, error: { code: 'VALIDATION', message: 'tier_min must be at or below tier_max' } };
+  }
+
+  await db
+    .update(tournaments)
+    .set({
+      name: parsed.data.name,
+      format: parsed.data.format,
+      tournament_type: parsed.data.tournament_type,
+      start_at: new Date(parsed.data.start_at),
+      tier_min: parsed.data.tier_min,
+      tier_max: parsed.data.tier_max,
+    })
+    .where(eq(tournaments.id, t.id));
+
+  try {
+    revalidatePath('/t');
+    revalidatePath(`/t/${t.slug}`);
+  } catch {
+    // outside request scope
+  }
+
+  return { success: true, data: { tournament_id: t.id } };
+}
+
+// ── deleteTournament ─────────────────────────────────────────────────────────
+
+const DeleteSchema = z.object({ tournament_id: z.string().uuid() });
+
+/**
+ * Drop a tournament. Allowed only when status ∈ {draft, open} AND zero rows
+ * in the matches table for this tournament. FK cascade clears registrations
+ * and brackets rows. Requires club admin.
+ */
+export async function deleteTournament(
+  input: z.input<typeof DeleteSchema>,
+  clerkUserId?: string,
+): Promise<Result<{ deleted: true }>> {
+  const userId = clerkUserId ?? (await auth()).userId;
+  if (!userId) {
+    return { success: false, error: { code: 'UNAUTHORIZED', message: 'Sign in required' } };
+  }
+
+  const parsed = DeleteSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.message } };
+  }
+
+  const [u] = await db.select().from(users).where(eq(users.clerk_id, userId)).limit(1);
+  if (!u) {
+    return { success: false, error: { code: 'UNAUTHORIZED', message: 'User not synced' } };
+  }
+
+  const [t] = await db.select().from(tournaments).where(eq(tournaments.id, parsed.data.tournament_id)).limit(1);
+  if (!t) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Tournament not found' } };
+  }
+
+  try {
+    await assertClubAdmin(u.id, t.club_id);
+  } catch (err) {
+    if (err instanceof ForbiddenError) {
+      return { success: false, error: { code: 'FORBIDDEN', message: err.message } };
+    }
+    throw err;
+  }
+
+  if (t.status !== 'draft' && t.status !== 'open') {
+    return { success: false, error: { code: 'INVALID_STATUS', message: 'Delete only allowed for draft or open tournaments' } };
+  }
+
+  const [{ value: matchCount }] = await db
+    .select({ value: sql<number>`count(*)::int` })
+    .from(matches)
+    .where(eq(matches.tournament_id, t.id));
+  if (matchCount > 0) {
+    return { success: false, error: { code: 'HAS_MATCHES', message: 'Cannot delete a tournament with matches recorded' } };
+  }
+
+  // Look up club slug BEFORE deleting (FK cascade clears related rows but we need the slug for revalidate)
+  const [club] = await db.select({ slug: clubs.slug }).from(clubs).where(eq(clubs.id, t.club_id)).limit(1);
+
+  await db.delete(tournaments).where(eq(tournaments.id, t.id));
+
+  try {
+    revalidatePath('/t');
+    if (club) revalidatePath(`/c/${club.slug}`);
+  } catch {
+    // outside request scope
+  }
+
+  return { success: true, data: { deleted: true } };
+}
+
 // ── generateBracket ──────────────────────────────────────────────────────────
 
 const GenerateBracketSchema = z.object({ tournament_id: z.string().uuid() });
@@ -390,6 +644,16 @@ export async function generateBracket(
     };
   }
 
+  if (t.status !== 'open') {
+    return {
+      success: false,
+      error: {
+        code: 'INVALID_STATUS',
+        message: 'Tournament must be open to generate bracket',
+      },
+    };
+  }
+
   // Load registered players (registered status only)
   const regRows = await db
     .select({ player_id: registrations.player_id })
@@ -452,6 +716,11 @@ export async function generateBracket(
         })),
       );
     }
+
+    await tx
+      .update(tournaments)
+      .set({ status: 'in_progress' })
+      .where(eq(tournaments.id, t.id));
 
     return [b];
   });
