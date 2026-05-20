@@ -391,6 +391,97 @@ export async function registerForTournament(
   return { success: true, data: { registration_id: reg.id } };
 }
 
+// ── updateTournament ─────────────────────────────────────────────────────────
+
+const UpdateSchema = z.object({
+  tournament_id: z.string().uuid(),
+  name: z.string().min(3).max(120),
+  format: z.enum(['americano', 'mexicano', 'round_robin', 'bracket']),
+  tournament_type: z.enum(['open', 'club_internal', 'group', 'casual']),
+  start_at: z.string().datetime(),
+  tier_min: z.enum(TIERS).nullable(),
+  tier_max: z.enum(TIERS).nullable(),
+});
+
+/**
+ * Edit tournament metadata. Allowed only when status ∈ {draft, open} AND
+ * zero rows in matches table for this tournament. Requires club admin.
+ */
+export async function updateTournament(
+  input: z.input<typeof UpdateSchema>,
+  clerkUserId?: string,
+): Promise<Result<{ tournament_id: string }>> {
+  const userId = clerkUserId ?? (await auth()).userId;
+  if (!userId) {
+    return { success: false, error: { code: 'UNAUTHORIZED', message: 'Sign in required' } };
+  }
+
+  const parsed = UpdateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.message } };
+  }
+
+  const [u] = await db.select().from(users).where(eq(users.clerk_id, userId)).limit(1);
+  if (!u) {
+    return { success: false, error: { code: 'UNAUTHORIZED', message: 'User not synced' } };
+  }
+
+  const [t] = await db.select().from(tournaments).where(eq(tournaments.id, parsed.data.tournament_id)).limit(1);
+  if (!t) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Tournament not found' } };
+  }
+
+  try {
+    await assertClubAdmin(u.id, t.club_id);
+  } catch (err) {
+    if (err instanceof ForbiddenError) {
+      return { success: false, error: { code: 'FORBIDDEN', message: err.message } };
+    }
+    throw err;
+  }
+
+  if (t.status !== 'draft' && t.status !== 'open') {
+    return { success: false, error: { code: 'INVALID_STATUS', message: 'Edit only allowed for draft or open tournaments' } };
+  }
+
+  // Zero rows in matches table for this tournament
+  const [{ value: matchCount }] = await db
+    .select({ value: sql<number>`count(*)::int` })
+    .from(matches)
+    .where(eq(matches.tournament_id, t.id));
+  if (matchCount > 0) {
+    return { success: false, error: { code: 'INVALID_STATUS', message: 'Cannot edit a tournament with matches recorded' } };
+  }
+
+  // Validate tier band
+  if (
+    parsed.data.tier_min &&
+    parsed.data.tier_max &&
+    TIER_TO_INT[parsed.data.tier_min] > TIER_TO_INT[parsed.data.tier_max]
+  ) {
+    return { success: false, error: { code: 'VALIDATION', message: 'tier_min must be at or below tier_max' } };
+  }
+
+  await db
+    .update(tournaments)
+    .set({
+      name: parsed.data.name,
+      format: parsed.data.format,
+      tournament_type: parsed.data.tournament_type,
+      start_at: new Date(parsed.data.start_at),
+      tier_min: parsed.data.tier_min,
+      tier_max: parsed.data.tier_max,
+    })
+    .where(eq(tournaments.id, t.id));
+
+  try {
+    revalidatePath('/t');
+    revalidatePath(`/t/${t.slug}`);
+  } catch {}
+
+  return { success: true, data: { tournament_id: t.id } };
+}
+
 // ── generateBracket ──────────────────────────────────────────────────────────
 
 const GenerateBracketSchema = z.object({ tournament_id: z.string().uuid() });

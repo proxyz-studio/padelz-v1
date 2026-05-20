@@ -5,6 +5,7 @@ import { db } from '@/libs/DB';
 import {
   club_memberships,
   clubs,
+  matches,
   players,
   registrations,
   tournaments,
@@ -14,6 +15,7 @@ import {
   createTournament,
   publishTournament,
   registerForTournament,
+  updateTournament,
 } from '@/features/tournaments/actions';
 
 describe('createTournament', () => {
@@ -357,6 +359,173 @@ describe('publishTournament', () => {
       .returning();
 
     const r = await publishTournament({ tournament_id: t.id }, otherClerkId);
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('FORBIDDEN');
+  });
+});
+
+describe('updateTournament', () => {
+  it('club admin can edit name + start_at when status is draft or open and no matches exist', async () => {
+    // Create draft tournament via createTournament
+    const clerkId = `c-upd-${uuidv7().slice(0, 8)}`;
+    const [u] = await db.insert(users).values({ clerk_id: clerkId, email: `${clerkId}@x` }).returning();
+    const [c] = await db.insert(clubs).values({ slug: `upd-${clerkId.slice(-8)}`, name: 'Upd' }).returning();
+    await db.insert(club_memberships).values({ user_id: u.id, club_id: c.id, role: 'admin' });
+    const created = await createTournament(
+      {
+        club_id: c.id,
+        name: 'Original',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000).toISOString(),
+        tier_min: null,
+        tier_max: null,
+      },
+      clerkId,
+    );
+    if (!created.success) throw new Error('setup');
+
+    const newStart = new Date(Date.now() + 172_800_000).toISOString();
+    const r = await updateTournament(
+      {
+        tournament_id: created.data.tournament_id,
+        name: 'Renamed',
+        format: 'americano',
+        tournament_type: 'open',
+        start_at: newStart,
+        tier_min: null,
+        tier_max: null,
+      },
+      clerkId,
+    );
+
+    expect(r.success).toBe(true);
+    const [t] = await db.select().from(tournaments).where(eq(tournaments.id, created.data.tournament_id));
+    expect(t.name).toBe('Renamed');
+    expect(t.format).toBe('americano');
+  });
+
+  it('returns INVALID_STATUS when tournament is in_progress', async () => {
+    // Setup tournament with status=in_progress
+    const clerkId = `c-upd2-${uuidv7().slice(0, 8)}`;
+    const [u] = await db.insert(users).values({ clerk_id: clerkId, email: `${clerkId}@x` }).returning();
+    const [c] = await db.insert(clubs).values({ slug: `upd2-${clerkId.slice(-8)}`, name: 'Upd2' }).returning();
+    await db.insert(club_memberships).values({ user_id: u.id, club_id: c.id, role: 'admin' });
+    const [t] = await db.insert(tournaments).values({
+      slug: `t-upd2-${clerkId.slice(-8)}`,
+      club_id: c.id,
+      name: 'Locked',
+      format: 'round_robin',
+      tournament_type: 'club_internal',
+      start_at: new Date(Date.now() + 86_400_000),
+      status: 'in_progress',
+      created_by: u.id,
+    }).returning();
+
+    const r = await updateTournament(
+      {
+        tournament_id: t.id,
+        name: 'Try Rename',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000).toISOString(),
+        tier_min: null,
+        tier_max: null,
+      },
+      clerkId,
+    );
+
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('INVALID_STATUS');
+  });
+
+  it('returns INVALID_STATUS when tournament has matches', async () => {
+    const clerkId = `c-upd3-${uuidv7().slice(0, 8)}`;
+    const [u] = await db.insert(users).values({ clerk_id: clerkId, email: `${clerkId}@x` }).returning();
+    const [c] = await db.insert(clubs).values({ slug: `upd3-${clerkId.slice(-8)}`, name: 'Upd3' }).returning();
+    await db.insert(club_memberships).values({ user_id: u.id, club_id: c.id, role: 'admin' });
+    const [t] = await db.insert(tournaments).values({
+      slug: `t-upd3-${clerkId.slice(-8)}`,
+      club_id: c.id,
+      name: 'Has Matches',
+      format: 'round_robin',
+      tournament_type: 'club_internal',
+      start_at: new Date(Date.now() + 86_400_000),
+      status: 'open',
+      created_by: u.id,
+    }).returning();
+    const [p1] = await db.insert(players).values({ user_id: u.id, handle: `p1-${clerkId.slice(-8)}`, display_name: 'P1', tier: 'bronze' }).returning();
+    await db.insert(matches).values({
+      tournament_id: t.id,
+      team_a: [p1.id],
+      team_b: [p1.id],
+      status: 'scheduled',
+    });
+
+    const r = await updateTournament(
+      {
+        tournament_id: t.id,
+        name: 'Rename Anyway',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000).toISOString(),
+        tier_min: null,
+        tier_max: null,
+      },
+      clerkId,
+    );
+
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('INVALID_STATUS');
+  });
+
+  it('returns FORBIDDEN for non-admin', async () => {
+    const adminClerkId = `c-upd4a-${uuidv7().slice(0, 8)}`;
+    const otherClerkId = `c-upd4b-${uuidv7().slice(0, 8)}`;
+    const [admin] = await db
+      .insert(users)
+      .values({ clerk_id: adminClerkId, email: `${adminClerkId}@x` })
+      .returning();
+    await db
+      .insert(users)
+      .values({ clerk_id: otherClerkId, email: `${otherClerkId}@x` });
+    const [c] = await db
+      .insert(clubs)
+      .values({ slug: `upd4-${otherClerkId.slice(-8)}`, name: 'Upd4' })
+      .returning();
+    await db
+      .insert(club_memberships)
+      .values({ user_id: admin.id, club_id: c.id, role: 'admin' });
+    const [t] = await db
+      .insert(tournaments)
+      .values({
+        slug: `t-upd4-${otherClerkId.slice(-8)}`,
+        club_id: c.id,
+        name: 'Draft',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000),
+        status: 'draft',
+        created_by: admin.id,
+      })
+      .returning();
+
+    const r = await updateTournament(
+      {
+        tournament_id: t.id,
+        name: 'Attempt',
+        format: 'round_robin',
+        tournament_type: 'club_internal',
+        start_at: new Date(Date.now() + 86_400_000).toISOString(),
+        tier_min: null,
+        tier_max: null,
+      },
+      otherClerkId,
+    );
+
     expect(r.success).toBe(false);
     if (r.success) return;
     expect(r.error.code).toBe('FORBIDDEN');
