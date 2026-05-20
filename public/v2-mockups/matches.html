@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match Finder — Padel Z</title>
+<style>
+  :root {
+    --nav-bg: #1C2333;
+    --bg: #F4F3EF;
+    --bg-card: #FFFFFF;
+    --accent: #2E7D52;
+    --accent-light: #EBF5EE;
+    --accent-mid: #4A9E6B;
+    --text: #1A1A1A;
+    --text-mid: #4A4A4A;
+    --text-muted: #888888;
+    --border: #E2E0D8;
+    --border-dark: #C8C5BB;
+    --bronze: #9C6B2E; --bronze-bg: #FDF3E7;
+    --silver: #6B7280; --silver-bg: #F3F4F6;
+    --gold: #B45309; --gold-bg: #FFFBEB;
+    --platinum: #4B5563; --platinum-bg: #F1F5F9;
+    --diamond: #1D4ED8; --diamond-bg: #EFF6FF;
+    --red: #DC2626; --red-bg: #FEF2F2;
+    --amber: #B45309; --amber-bg: #FFFBEB;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.5; font-size: 14px; }
+
+  /* NAV */
+  nav {
+    background: var(--nav-bg); position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; height: 52px; padding: 0 20px; gap: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-logo { color: #fff; font-size: 17px; font-weight: 800; letter-spacing: -0.3px; text-decoration: none; }
+  .nav-logo em { color: #4A9E6B; font-style: normal; }
+  .nav-search {
+    flex: 1; max-width: 320px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px; height: 32px; display: flex; align-items: center; padding: 0 10px; gap: 8px;
+  }
+  .nav-search input { background: none; border: none; outline: none; color: #fff; font-size: 13px; width: 100%; }
+  .nav-search input::placeholder { color: rgba(255,255,255,0.35); }
+  .nav-links { display: flex; gap: 2px; }
+  .nav-link { color: rgba(255,255,255,0.65); font-size: 13px; font-weight: 500; text-decoration: none; padding: 5px 12px; border-radius: 5px; transition: all 0.12s; }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  .nav-link.active { color: #fff; }
+  .nav-spacer { flex: 1; }
+  .nav-join { background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 5px; text-decoration: none; }
+
+  /* PAGE HEADER */
+  .page-header {
+    background: var(--nav-bg); border-bottom: 3px solid var(--accent);
+    padding: 20px 20px 0;
+  }
+  .page-header-inner { max-width: 1100px; margin: 0 auto; }
+  .page-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .page-title { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+  .page-title span { color: var(--accent-mid); }
+  .post-game-btn {
+    background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+    padding: 9px 18px; border-radius: 6px; text-decoration: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .post-game-btn:hover { background: #256644; }
+
+  /* TYPE TABS */
+  .type-tabs { display: flex; gap: 0; }
+  .type-tab {
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+    padding: 9px 18px 11px; border-bottom: 2px solid transparent; cursor: pointer;
+    text-decoration: none; transition: all 0.12s; white-space: nowrap;
+  }
+  .type-tab.active { color: #fff; border-bottom-color: var(--accent-mid); }
+  .type-tab:hover:not(.active) { color: rgba(255,255,255,0.8); }
+  .tab-count {
+    font-size: 10px; font-weight: 800; background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.6); padding: 1px 6px; border-radius: 10px; margin-left: 4px;
+  }
+  .type-tab.active .tab-count { background: rgba(74,158,107,0.3); color: var(--accent-mid); }
+
+  /* FILTER BAR */
+  .filter-bar {
+    background: var(--bg-card); border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+  }
+  .filter-bar-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 8px; height: 46px; }
+  .filter-select {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text-mid);
+    font-size: 12px; font-weight: 600; padding: 5px 10px 5px 10px; border-radius: 5px;
+    cursor: pointer; outline: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center;
+    padding-right: 26px;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+  .filter-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; }
+  .filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .filter-spacer { flex: 1; }
+  .show-full-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+  .toggle-track { width: 32px; height: 17px; background: var(--border); border-radius: 9px; position: relative; transition: background 0.2s; }
+  .toggle-track.on { background: var(--accent); }
+  .toggle-thumb { width: 13px; height: 13px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle-track.on .toggle-thumb { left: 17px; }
+
+  /* MAIN LAYOUT */
+  .page { max-width: 1100px; margin: 0 auto; padding: 16px 20px; display: grid; grid-template-columns: 1fr 268px; gap: 20px; }
+
+  /* SECTION LABEL */
+  .day-label {
+    font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 10px 0 6px; display: flex; align-items: center; gap: 8px;
+  }
+  .day-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* MATCH CARD */
+  .match-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 8px; overflow: hidden; transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  .match-card:hover { border-color: var(--border-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .match-card.full { opacity: 0.6; }
+
+  .match-main { display: grid; grid-template-columns: 1fr auto; gap: 16px; padding: 14px 16px; align-items: start; }
+  .match-left { display: flex; flex-direction: column; gap: 8px; }
+
+  /* TOP ROW: type badge + title + time */
+  .match-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .type-badge {
+    font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 3px;
+    letter-spacing: 0.5px; text-transform: uppercase; flex-shrink: 0;
+  }
+  .tb-game { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+  .tb-tourn { background: var(--gold-bg); color: var(--gold); border: 1px solid #FCD34D; }
+  .tb-group { background: var(--accent-light); color: var(--accent); border: 1px solid #A7D7B8; }
+  .tb-live { background: var(--red-bg); color: var(--red); border: 1px solid #FCA5A5; }
+
+  .match-name { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
+  .match-time { font-size: 13px; font-weight: 700; color: var(--text-mid); margin-left: auto; white-space: nowrap; }
+  .time-soon { color: var(--red); }
+
+  /* META ROW */
+  .match-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tier {
+    font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 3px;
+    letter-spacing: 0.4px; text-transform: uppercase; display: inline-block; flex-shrink: 0;
+  }
+  .tier-bronze { background: var(--bronze-bg); color: var(--bronze); border: 1px solid #E8C99A; }
+  .tier-silver { background: var(--silver-bg); color: var(--silver); border: 1px solid #D1D5DB; }
+  .tier-gold { background: var(--gold-bg); color: var(--gold); border: 1px solid #FCD34D; }
+  .tier-platinum { background: var(--platinum-bg); color: var(--platinum); border: 1px solid #CBD5E1; }
+  .tier-diamond { background: var(--diamond-bg); color: var(--diamond); border: 1px solid #BFDBFE; }
+  .meta-sep { color: var(--border-dark); font-size: 11px; }
+  .meta-item { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .meta-item strong { color: var(--text-mid); font-weight: 600; }
+
+  /* PLAYER SLOTS — the core Lunda mechanic */
+  .player-slots { display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+  .slot {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .slot-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; flex-shrink: 0;
+  }
+  .slot-avatar.filled { background: #E8E6DE; color: var(--text-mid); border: 2px solid var(--border-dark); }
+  .slot-avatar.filled.you { background: var(--accent-light); color: var(--accent); border: 2px solid var(--accent-mid); }
+  .slot-avatar.empty {
+    background: #F8F7F3; color: var(--text-muted);
+    border: 2px dashed var(--border-dark); font-size: 18px; font-weight: 300;
+  }
+  .slot-name { font-size: 9px; color: var(--text-muted); font-weight: 600; text-align: center; max-width: 38px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slot-name.you { color: var(--accent); }
+
+  .slots-vs { font-size: 11px; font-weight: 700; color: var(--text-muted); padding: 0 2px; padding-bottom: 16px; }
+
+  /* Tourn player count (different display) */
+  .tourn-players { display: flex; align-items: center; gap: 10px; }
+  .player-pips { display: flex; gap: 2px; flex-wrap: wrap; max-width: 240px; }
+  .pip { width: 20px; height: 20px; border-radius: 50%; background: #E8E6DE; border: 1px solid var(--border-dark); display: flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 800; color: var(--text-muted); }
+  .pip.empty { background: #F8F7F3; border-style: dashed; color: var(--border-dark); font-size: 12px; font-weight: 300; }
+  .tourn-count { font-size: 13px; font-weight: 700; color: var(--text); }
+  .tourn-count span { color: var(--text-muted); font-weight: 400; font-size: 12px; }
+
+  /* FILL BAR */
+  .fill-row { display: flex; align-items: center; gap: 8px; }
+  .fill-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; max-width: 160px; }
+  .fill-bar { height: 100%; border-radius: 2px; background: var(--accent); }
+  .fill-bar.warn { background: var(--amber); }
+  .fill-bar.full-bar { background: var(--red); }
+  .fill-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .fill-label strong { color: var(--text); }
+
+  /* RIGHT COLUMN: spots + button */
+  .match-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; min-width: 100px; }
+  .spots-badge {
+    font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 4px;
+    white-space: nowrap; text-align: center;
+  }
+  .spots-open { background: var(--accent-light); color: var(--accent); border: 1px solid #A7D7B8; }
+  .spots-one { background: var(--amber-bg); color: var(--amber); border: 1px solid #FCD34D; }
+  .spots-full { background: var(--silver-bg); color: var(--silver); border: 1px solid #D1D5DB; }
+
+  .join-btn {
+    width: 100%; padding: 9px 0; border-radius: 6px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 800; letter-spacing: 0.2px; transition: all 0.12s;
+    text-align: center; text-decoration: none; display: block;
+  }
+  .join-btn.primary { background: var(--accent); color: #fff; }
+  .join-btn.primary:hover { background: #256644; }
+  .join-btn.register { background: var(--nav-bg); color: #fff; }
+  .join-btn.register:hover { background: #141B2A; }
+  .join-btn.joined { background: var(--accent-light); color: var(--accent); border: 1px solid var(--accent-mid); cursor: default; }
+  .join-btn.waitlist { background: #F8F7F3; color: var(--text-muted); border: 1px solid var(--border); }
+  .join-btn.waitlist:hover { background: var(--silver-bg); }
+
+  .match-deadline { font-size: 10px; color: var(--text-muted); text-align: right; }
+  .match-deadline strong { color: var(--text-mid); }
+
+  /* EXPANDED TOURN DETAILS */
+  .tourn-footer {
+    padding: 10px 16px; border-top: 1px solid var(--border); background: #FAFAF7;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .tf-item { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .tf-item strong { color: var(--text-mid); font-weight: 700; }
+  .prize-tag { font-size: 10px; font-weight: 700; background: var(--gold-bg); color: var(--gold); border: 1px solid #FCD34D; padding: 1px 7px; border-radius: 3px; }
+
+  /* SECTION HEADER */
+  .section-hd { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+  .section-title { font-size: 13px; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 0.4px; }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 14px; }
+  .sb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .sb-hd { background: #F8F7F3; border-bottom: 1px solid var(--border); padding: 8px 14px; font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .sb-row { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .sb-row:last-child { border-bottom: none; }
+  .sb-row-icon { width: 30px; height: 30px; border-radius: 6px; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; border: 1px solid #A7D7B8; }
+  .sb-row-info { flex: 1; }
+  .sb-row-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .sb-row-meta { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .sb-row-count { font-size: 11px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+
+  .sb-stat-row { display: flex; padding: 10px 14px; gap: 0; border-bottom: 1px solid var(--border); }
+  .sb-stat-row:last-child { border-bottom: none; }
+  .sb-stat { flex: 1; text-align: center; }
+  .sb-stat-val { font-size: 20px; font-weight: 900; color: var(--text); }
+  .sb-stat-lbl { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+  .you-row { padding: 12px 14px; }
+  .you-profile { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .you-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-light); border: 2px solid var(--accent-mid); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--accent); }
+  .you-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .you-tier { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .post-btn-sb { display: block; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 8px; border-radius: 6px; text-align: center; text-decoration: none; }
+
+  /* LIVE PULSE */
+  .live-pulse { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 800; color: var(--red); }
+  .live-pulse::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--red); display: block; animation: blink 1.4s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  footer { border-top: 1px solid var(--border); padding: 20px; text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="landing.html" class="nav-logo">Padel<em>Z</em></a>
+  <div class="nav-search">
+    <span style="color:rgba(255,255,255,0.35);font-size:13px;">⌕</span>
+    <input type="text" placeholder="Search players, clubs, tournaments…">
+  </div>
+  <div class="nav-links">
+    <a href="landing.html" class="nav-link">Leaderboard</a>
+    <a href="#" class="nav-link active">Matches</a>
+    <a href="#" class="nav-link">Clubs</a>
+    <a href="#" class="nav-link">Groups</a>
+    <a href="#" class="nav-link">Marketplace</a>
+  </div>
+  <div class="nav-spacer"></div>
+  <a href="#" class="nav-join">Join Free</a>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-title-row">
+      <div class="page-title">Match <span>Finder</span></div>
+      <button class="post-game-btn" onclick="alert('Post a Game — coming soon')">+ Post a Game</button>
+    </div>
+    <div class="type-tabs">
+      <a href="#" class="type-tab active" onclick="filterType('all');return false;">
+        All <span class="tab-count">24</span>
+      </a>
+      <a href="#" class="type-tab" onclick="filterType('game');return false;">
+        Open Games <span class="tab-count">14</span>
+      </a>
+      <a href="#" class="type-tab" onclick="filterType('tournament');return false;">
+        Tournaments <span class="tab-count">7</span>
+      </a>
+      <a href="#" class="type-tab" onclick="filterType('group');return false;">
+        Group Events <span class="tab-count">3</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-bar-inner">
+    <span class="filter-label">Filter:</span>
+    <select class="filter-select">
+      <option>📅 Today</option>
+      <option>This Week</option>
+      <option>Next Week</option>
+      <option>All Dates</option>
+    </select>
+    <select class="filter-select">
+      <option>All Tiers</option>
+      <option>Bronze</option>
+      <option>Silver</option>
+      <option>Gold</option>
+      <option>Platinum</option>
+      <option>Diamond</option>
+    </select>
+    <select class="filter-select">
+      <option>All Formats</option>
+      <option>Americano</option>
+      <option>Mexicano</option>
+      <option>Round Robin</option>
+      <option>Bracket</option>
+      <option>Casual</option>
+    </select>
+    <select class="filter-select">
+      <option>All Clubs</option>
+      <option>Blue Tree Padel</option>
+      <option>Destination Padel</option>
+      <option>Xplore Padel</option>
+      <option>Rawai Padel</option>
+    </select>
+    <div class="filter-sep"></div>
+    <div class="filter-spacer"></div>
+    <div class="show-full-toggle" onclick="this.querySelector('.toggle-track').classList.toggle('on');this.querySelector('.toggle-thumb');">
+      <div class="toggle-track">
+        <div class="toggle-thumb"></div>
+      </div>
+      Show full games
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="page">
+  <div class="main">
+
+    <!-- TODAY -->
+    <div class="day-label">Today — Monday 19 May</div>
+
+    <!-- LIVE GAME -->
+    <div class="match-card" data-type="game">
+      <div class="match-main">
+        <div class="match-left">
+          <div class="match-top">
+            <span class="type-badge tb-live"><span class="live-pulse">LIVE</span></span>
+            <span class="match-name">Blue Tree Evening Mexicano</span>
+            <span class="match-time time-soon">In progress</span>
+          </div>
+          <div class="match-meta">
+            <span class="tier tier-gold">Gold</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Mexicano</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">📍 Blue Tree Padel</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Court 2</span>
+          </div>
+          <div class="player-slots">
+            <div class="slot">
+              <div class="slot-avatar filled">JF</div>
+              <div class="slot-name">James F.</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar filled">MS</div>
+              <div class="slot-name">Miguel S.</div>
+            </div>
+            <div class="slots-vs">vs</div>
+            <div class="slot">
+              <div class="slot-avatar filled">KT</div>
+              <div class="slot-name">Kenji T.</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar filled">PR</div>
+              <div class="slot-name">Priya R.</div>
+            </div>
+          </div>
+        </div>
+        <div class="match-right">
+          <span class="spots-badge spots-full">Full</span>
+          <a href="#" class="join-btn waitlist">Watch →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPEN GAME — 1 spot -->
+    <div class="match-card" data-type="game">
+      <div class="match-main">
+        <div class="match-left">
+          <div class="match-top">
+            <span class="type-badge tb-game">Open Game</span>
+            <span class="match-name">Casual 4s — need one more</span>
+            <span class="match-time time-soon">18:30 · 1h away</span>
+          </div>
+          <div class="match-meta">
+            <span class="tier tier-silver">Silver</span>
+            <span class="tier tier-gold" style="margin-left:2px;">Gold</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Casual</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">📍 Destination Padel</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Posted by <strong>Anna L.</strong></span>
+          </div>
+          <div class="player-slots">
+            <div class="slot">
+              <div class="slot-avatar filled">AL</div>
+              <div class="slot-name">Anna L.</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar filled">TK</div>
+              <div class="slot-name">Tomasz K.</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar filled">NP</div>
+              <div class="slot-name">Nara P.</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar empty">+</div>
+              <div class="slot-name" style="color:var(--text-muted);">Open</div>
+            </div>
+          </div>
+        </div>
+        <div class="match-right">
+          <span class="spots-badge spots-one">1 spot left</span>
+          <a href="#" class="join-btn primary" onclick="joinGame(this)">Join</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPEN GAME — 2 spots, you're in -->
+    <div class="match-card" data-type="game">
+      <div class="match-main">
+        <div class="match-left">
+          <div class="match-top">
+            <span class="type-badge tb-game">Open Game</span>
+            <span class="match-name">Americano — 6 courts, rotating</span>
+            <span class="match-time">19:00</span>
+          </div>
+          <div class="match-meta">
+            <span class="tier tier-platinum">Platinum</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Americano</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">📍 Blue Tree Padel</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Posted by <strong>David O.</strong></span>
+          </div>
+          <div class="player-slots">
+            <div class="slot">
+              <div class="slot-avatar filled you">You</div>
+              <div class="slot-name you">You</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar filled">DO</div>
+              <div class="slot-name">David O.</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar filled">CS</div>
+              <div class="slot-name">Carlos S.</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar empty">+</div>
+              <div class="slot-name" style="color:var(--text-muted);">Open</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar empty">+</div>
+              <div class="slot-name" style="color:var(--text-muted);">Open</div>
+            </div>
+            <div class="slot">
+              <div class="slot-avatar empty">+</div>
+              <div class="slot-name" style="color:var(--text-muted);">Open</div>
+            </div>
+          </div>
+        </div>
+        <div class="match-right">
+          <span class="spots-badge spots-open">3 spots left</span>
+          <a href="#" class="join-btn joined">Joined ✓</a>
+          <div class="match-deadline">Invite a friend?</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOURNAMENT — open registration -->
+    <div class="match-card" data-type="tournament">
+      <div class="match-main">
+        <div class="match-left">
+          <div class="match-top">
+            <span class="type-badge tb-tourn">Tournament</span>
+            <span class="match-name">Blue Tree Summer Open</span>
+            <span class="match-time">Sat 24 May · 9:00 AM</span>
+          </div>
+          <div class="match-meta">
+            <span class="tier tier-gold">Gold</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Americano</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">📍 Blue Tree Padel</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">~4 hrs</span>
+          </div>
+          <div class="tourn-players">
+            <div class="player-pips" id="pips-1"></div>
+            <div class="tourn-count">14 <span>/ 24 registered</span></div>
+          </div>
+          <div class="fill-row" style="margin-top:4px;">
+            <div class="fill-track"><div class="fill-bar" style="width:58%"></div></div>
+            <span class="fill-label"><strong>10</strong> spots open</span>
+          </div>
+        </div>
+        <div class="match-right">
+          <span class="spots-badge spots-open">Open</span>
+          <a href="#" class="join-btn register">Register</a>
+          <div class="match-deadline">Closes <strong>Wed 21 May</strong></div>
+        </div>
+      </div>
+      <div class="tourn-footer">
+        <div class="tf-item">🏆 <strong>Americano format</strong></div>
+        <div class="tf-item">👥 <strong>24</strong> max players</div>
+        <div class="tf-item">⏱ ~4 hours</div>
+        <div class="tf-item">✅ Results tracked · Points earned</div>
+      </div>
+    </div>
+
+    <!-- GROUP EVENT -->
+    <div class="match-card" data-type="group">
+      <div class="match-main">
+        <div class="match-left">
+          <div class="match-top">
+            <span class="type-badge tb-group">Group · Phuket Expat Padel</span>
+            <span class="match-name">Monday Mexicano — members only</span>
+            <span class="match-time">20:00</span>
+          </div>
+          <div class="match-meta">
+            <span class="tier tier-silver">Silver</span>
+            <span class="tier tier-gold" style="margin-left:2px;">Gold</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Mexicano</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">📍 Xplore Padel</span>
+          </div>
+          <div class="player-slots">
+            <div class="slot"><div class="slot-avatar filled">RC</div><div class="slot-name">Rafael C.</div></div>
+            <div class="slot"><div class="slot-avatar filled">EB</div><div class="slot-name">Emma B.</div></div>
+            <div class="slot"><div class="slot-avatar filled">HK</div><div class="slot-name">Hana K.</div></div>
+            <div class="slot"><div class="slot-avatar filled">SO</div><div class="slot-name">Sam O.</div></div>
+            <div class="slot"><div class="slot-avatar empty">+</div><div class="slot-name" style="color:var(--text-muted);">Open</div></div>
+            <div class="slot"><div class="slot-avatar empty">+</div><div class="slot-name" style="color:var(--text-muted);">Open</div></div>
+            <div class="slot"><div class="slot-avatar empty">+</div><div class="slot-name" style="color:var(--text-muted);">Open</div></div>
+            <div class="slot"><div class="slot-avatar empty">+</div><div class="slot-name" style="color:var(--text-muted);">Open</div></div>
+          </div>
+        </div>
+        <div class="match-right">
+          <span class="spots-badge spots-open">4 spots left</span>
+          <a href="#" class="join-btn primary" onclick="joinGame(this)">Join</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOMORROW -->
+    <div class="day-label">Tomorrow — Tuesday 20 May</div>
+
+    <!-- OPEN GAME — 2 spots -->
+    <div class="match-card" data-type="game">
+      <div class="match-main">
+        <div class="match-left">
+          <div class="match-top">
+            <span class="type-badge tb-game">Open Game</span>
+            <span class="match-name">Morning doubles — mixed levels OK</span>
+            <span class="match-time">07:30</span>
+          </div>
+          <div class="match-meta">
+            <span class="tier tier-bronze">Bronze</span>
+            <span class="tier tier-silver" style="margin-left:2px;">Silver</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Casual</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">📍 Rawai Padel</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Posted by <strong>Nara P.</strong></span>
+          </div>
+          <div class="player-slots">
+            <div class="slot"><div class="slot-avatar filled">NP</div><div class="slot-name">Nara P.</div></div>
+            <div class="slot"><div class="slot-avatar filled">ES</div><div class="slot-name">Elena S.</div></div>
+            <div class="slot"><div class="slot-avatar empty">+</div><div class="slot-name" style="color:var(--text-muted);">Open</div></div>
+            <div class="slot"><div class="slot-avatar empty">+</div><div class="slot-name" style="color:var(--text-muted);">Open</div></div>
+          </div>
+        </div>
+        <div class="match-right">
+          <span class="spots-badge spots-open">2 spots left</span>
+          <a href="#" class="join-btn primary" onclick="joinGame(this)">Join</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOURNAMENT — filling fast -->
+    <div class="match-card" data-type="tournament">
+      <div class="match-main">
+        <div class="match-left">
+          <div class="match-top">
+            <span class="type-badge tb-tourn">Tournament</span>
+            <span class="match-name">Xplore Elite Challenge</span>
+            <span class="match-time">Sat 31 May · 10:00 AM</span>
+          </div>
+          <div class="match-meta">
+            <span class="tier tier-platinum">Platinum+</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Round Robin + Bracket</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">📍 Xplore Padel</span>
+          </div>
+          <div class="tourn-players">
+            <div class="player-pips" id="pips-2"></div>
+            <div class="tourn-count">15 <span>/ 16 registered</span></div>
+          </div>
+          <div class="fill-row" style="margin-top:4px;">
+            <div class="fill-track"><div class="fill-bar warn" style="width:94%"></div></div>
+            <span class="fill-label" style="color:var(--amber);font-weight:700;">1 spot left!</span>
+          </div>
+        </div>
+        <div class="match-right">
+          <span class="spots-badge spots-one">1 spot left</span>
+          <a href="#" class="join-btn register">Register</a>
+          <div class="match-deadline">Closes <strong>Wed 28 May</strong></div>
+        </div>
+      </div>
+      <div class="tourn-footer">
+        <div class="tf-item">🏆 <strong>Round Robin + Bracket</strong></div>
+        <div class="tf-item">👥 <strong>16</strong> players</div>
+        <div class="tf-item">⏱ ~5 hours</div>
+        <div class="tf-item">✅ Results tracked · Points earned</div>
+      </div>
+    </div>
+
+    <!-- OPEN GAME — all spots open, evening -->
+    <div class="match-card" data-type="game">
+      <div class="match-main">
+        <div class="match-left">
+          <div class="match-top">
+            <span class="type-badge tb-game">Open Game</span>
+            <span class="match-name">Platinum practice — competitive</span>
+            <span class="match-time">19:30</span>
+          </div>
+          <div class="match-meta">
+            <span class="tier tier-platinum">Platinum</span>
+            <span class="tier tier-diamond" style="margin-left:2px;">Diamond</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Americano</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">📍 Destination Padel</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Posted by <strong>Carlos S.</strong></span>
+          </div>
+          <div class="player-slots">
+            <div class="slot"><div class="slot-avatar filled">CS</div><div class="slot-name">Carlos S.</div></div>
+            <div class="slot"><div class="slot-avatar empty">+</div><div class="slot-name" style="color:var(--text-muted);">Open</div></div>
+            <div class="slot"><div class="slot-avatar empty">+</div><div class="slot-name" style="color:var(--text-muted);">Open</div></div>
+            <div class="slot"><div class="slot-avatar empty">+</div><div class="slot-name" style="color:var(--text-muted);">Open</div></div>
+          </div>
+        </div>
+        <div class="match-right">
+          <span class="spots-badge spots-open">3 spots left</span>
+          <a href="#" class="join-btn primary" onclick="joinGame(this)">Join</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- THIS WEEKEND label -->
+    <div class="day-label">This Weekend — Sat 24 · Sun 25 May</div>
+
+    <!-- TOURNAMENT — Mexicano -->
+    <div class="match-card" data-type="tournament">
+      <div class="match-main">
+        <div class="match-left">
+          <div class="match-top">
+            <span class="type-badge tb-tourn">Tournament</span>
+            <span class="match-name">Destination Padel Mexicano</span>
+            <span class="match-time">Sun 25 May · 8:00 AM</span>
+          </div>
+          <div class="match-meta">
+            <span class="tier tier-silver">Silver</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">Mexicano</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item">📍 Destination Padel</span>
+          </div>
+          <div class="tourn-players">
+            <div class="player-pips" id="pips-3"></div>
+            <div class="tourn-count">8 <span>/ 16 registered</span></div>
+          </div>
+          <div class="fill-row" style="margin-top:4px;">
+            <div class="fill-track"><div class="fill-bar" style="width:50%"></div></div>
+            <span class="fill-label"><strong>8</strong> spots open</span>
+          </div>
+        </div>
+        <div class="match-right">
+          <span class="spots-badge spots-open">Open</span>
+          <a href="#" class="join-btn register">Register</a>
+          <div class="match-deadline">Closes <strong>Fri 23 May</strong></div>
+        </div>
+      </div>
+      <div class="tourn-footer">
+        <div class="tf-item">🏆 <strong>Mexicano format</strong></div>
+        <div class="tf-item">👥 <strong>16</strong> players</div>
+        <div class="tf-item">⏱ ~3 hours</div>
+        <div class="tf-item">✅ Results tracked · Points earned</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- YOUR PROFILE -->
+    <div class="sb-card">
+      <div class="sb-hd">You</div>
+      <div class="you-row">
+        <div class="you-profile">
+          <div class="you-avatar">JF</div>
+          <div>
+            <div class="you-name">James Fletcher</div>
+            <div class="you-tier"><span class="tier tier-platinum">Platinum</span> · Blue Tree Padel</div>
+          </div>
+        </div>
+        <a href="#" class="post-btn-sb" onclick="alert('Post a game — coming soon')">+ Post a Game</a>
+      </div>
+    </div>
+
+    <!-- GAMES YOU'RE IN -->
+    <div class="sb-card">
+      <div class="sb-hd">You're Playing</div>
+      <div class="sb-row">
+        <div class="sb-row-icon">🎾</div>
+        <div class="sb-row-info">
+          <div class="sb-row-name">Americano — Blue Tree</div>
+          <div class="sb-row-meta">Tonight 19:00 · 3 spots still open</div>
+        </div>
+        <span style="font-size:10px;font-weight:800;color:var(--accent);">Joined</span>
+      </div>
+    </div>
+
+    <!-- TODAY'S ACTIVITY -->
+    <div class="sb-card">
+      <div class="sb-hd">Today's Activity</div>
+      <div class="sb-stat-row">
+        <div class="sb-stat"><div class="sb-stat-val">9</div><div class="sb-stat-lbl">Open Games</div></div>
+        <div class="sb-stat"><div class="sb-stat-val">3</div><div class="sb-stat-lbl">Tournaments</div></div>
+        <div class="sb-stat"><div class="sb-stat-val">2</div><div class="sb-stat-lbl">Live Now</div></div>
+      </div>
+    </div>
+
+    <!-- YOUR GROUPS -->
+    <div class="sb-card">
+      <div class="sb-hd">Your Groups</div>
+      <div class="sb-row">
+        <div class="sb-row-icon">🏠</div>
+        <div class="sb-row-info">
+          <div class="sb-row-name">Blue Tree Regulars</div>
+          <div class="sb-row-meta">24 members · 1 game today</div>
+        </div>
+        <span class="sb-row-count">→</span>
+      </div>
+      <div class="sb-row">
+        <div class="sb-row-icon">⚡</div>
+        <div class="sb-row-info">
+          <div class="sb-row-name">Phuket Expat Padel</div>
+          <div class="sb-row-meta">68 members · 1 game tonight</div>
+        </div>
+        <span class="sb-row-count">→</span>
+      </div>
+      <div class="sb-row" style="padding:10px 14px;">
+        <a href="#" style="font-size:12px;color:var(--accent);font-weight:600;text-decoration:none;">Browse all groups →</a>
+      </div>
+    </div>
+
+    <!-- UPCOMING TOURNAMENTS -->
+    <div class="sb-card">
+      <div class="sb-hd">Open Tournaments</div>
+      <div class="sb-row">
+        <div class="sb-row-info">
+          <div class="sb-row-name">Blue Tree Summer Open</div>
+          <div class="sb-row-meta">Sat 24 May · Gold · 10 spots left</div>
+        </div>
+        <a href="#" style="font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;white-space:nowrap;">Sign up</a>
+      </div>
+      <div class="sb-row">
+        <div class="sb-row-info">
+          <div class="sb-row-name">Destination Mexicano</div>
+          <div class="sb-row-meta">Sun 25 May · Silver · 8 spots left</div>
+        </div>
+        <a href="#" style="font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;white-space:nowrap;">Sign up</a>
+      </div>
+      <div class="sb-row" style="opacity:0.6;">
+        <div class="sb-row-info">
+          <div class="sb-row-name">Xplore Elite Challenge</div>
+          <div class="sb-row-meta">Sat 31 May · Platinum+ · 1 spot left</div>
+        </div>
+        <a href="#" style="font-size:12px;font-weight:700;color:var(--amber);text-decoration:none;white-space:nowrap;">Last!</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>© 2025 Padel Z · Phuket Padel Community · Free for players and clubs · Built by PROXYZ Studio</footer>
+
+<script>
+  /* Build player pips for tournaments */
+  function buildPips(id, filled, total) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    for (let i = 0; i < total; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'pip' + (i >= filled ? ' empty' : '');
+      pip.textContent = i < filled ? '' : '+';
+      // Add simple initials for filled slots
+      if (i < filled) {
+        const initials = ['JF','CS','AL','KT','PR','DO','NP','TK','RC','EB','HK','SO','ES','MS'];
+        pip.textContent = initials[i % initials.length];
+      }
+      el.appendChild(pip);
+    }
+  }
+  buildPips('pips-1', 14, 24);
+  buildPips('pips-2', 15, 16);
+  buildPips('pips-3', 8, 16);
+
+  /* Join button */
+  function joinGame(btn) {
+    const card = btn.closest('.match-card');
+    const emptySlots = card.querySelectorAll('.slot-avatar.empty');
+    if (emptySlots.length === 0) return;
+    // Fill the first empty slot with "You"
+    const slot = emptySlots[0];
+    slot.className = 'slot-avatar filled you';
+    slot.textContent = 'You';
+    slot.parentElement.querySelector('.slot-name').textContent = 'You';
+    slot.parentElement.querySelector('.slot-name').className = 'slot-name you';
+    // Update button
+    btn.className = 'join-btn joined';
+    btn.textContent = 'Joined ✓';
+    btn.onclick = null;
+    // Update spots badge
+    const badge = btn.closest('.match-right').querySelector('.spots-badge');
+    const remaining = card.querySelectorAll('.slot-avatar.empty').length;
+    if (remaining === 0) {
+      badge.className = 'spots-badge spots-full';
+      badge.textContent = 'Full';
+    } else if (remaining === 1) {
+      badge.className = 'spots-badge spots-one';
+      badge.textContent = '1 spot left';
+    } else {
+      badge.className = 'spots-badge spots-open';
+      badge.textContent = remaining + ' spots left';
+    }
+  }
+
+  /* Type filter tabs */
+  function filterType(type) {
+    document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+    event.target.closest('.type-tab').classList.add('active');
+    document.querySelectorAll('.match-card').forEach(card => {
+      if (type === 'all' || card.dataset.type === type) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  /* Period toggle */
+  document.querySelector('.show-full-toggle').addEventListener('click', function() {
+    const track = this.querySelector('.toggle-track');
+    track.classList.toggle('on');
+  });
+</script>
+</body>
+</html>

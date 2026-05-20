@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>James Fletcher — Padel Z</title>
+<style>
+  :root {
+    --nav-bg: #1C2333;
+    --bg: #F4F3EF;
+    --bg-card: #FFFFFF;
+    --accent: #2E7D52;
+    --accent-light: #EBF5EE;
+    --accent-mid: #4A9E6B;
+    --text: #1A1A1A;
+    --text-mid: #4A4A4A;
+    --text-muted: #888888;
+    --border: #E2E0D8;
+    --border-dark: #C8C5BB;
+    --bronze: #9C6B2E; --bronze-bg: #FDF3E7;
+    --silver: #6B7280; --silver-bg: #F3F4F6;
+    --gold: #B45309; --gold-bg: #FFFBEB;
+    --platinum: #4B5563; --platinum-bg: #F1F5F9;
+    --diamond: #1D4ED8; --diamond-bg: #EFF6FF;
+    --playtomic: #0055B3;
+    --lunda: #C94A08;
+    --red: #DC2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.5; font-size: 14px; }
+
+  /* NAV */
+  nav {
+    background: var(--nav-bg); position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; height: 52px; padding: 0 20px; gap: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-logo { color: #fff; font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+  .nav-logo em { color: #4A9E6B; font-style: normal; }
+  .nav-search {
+    flex: 1; max-width: 320px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px; height: 32px; display: flex; align-items: center; padding: 0 10px; gap: 8px;
+  }
+  .nav-search input { background: none; border: none; outline: none; color: #fff; font-size: 13px; width: 100%; }
+  .nav-search input::placeholder { color: rgba(255,255,255,0.35); }
+  .nav-links { display: flex; gap: 2px; }
+  .nav-link { color: rgba(255,255,255,0.65); font-size: 13px; font-weight: 500; text-decoration: none; padding: 5px 12px; border-radius: 5px; }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  .nav-spacer { flex: 1; }
+  .nav-join { background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 5px; text-decoration: none; }
+
+  /* PROFILE HEADER BAND */
+  .profile-band {
+    background: var(--nav-bg);
+    border-bottom: 3px solid var(--accent);
+    padding: 20px 20px 0;
+  }
+  .profile-band-inner { max-width: 1100px; margin: 0 auto; }
+  .breadcrumb { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 16px; }
+  .breadcrumb a { color: rgba(255,255,255,0.4); text-decoration: none; }
+  .breadcrumb a:hover { color: rgba(255,255,255,0.7); }
+  .breadcrumb span { margin: 0 6px; }
+
+  .profile-top { display: flex; align-items: flex-start; gap: 16px; padding-bottom: 16px; }
+  .p-avatar-lg {
+    width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
+    background: #2C3D50; border: 2px solid rgba(74,158,107,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 900; color: var(--accent-mid);
+  }
+  .profile-id { flex: 1; }
+  .profile-name { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+  .profile-badges { display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+
+  .tier {
+    font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 3px;
+    letter-spacing: 0.4px; text-transform: uppercase; display: inline-block;
+  }
+  .tier-bronze { background: var(--bronze-bg); color: var(--bronze); border: 1px solid #E8C99A; }
+  .tier-silver { background: var(--silver-bg); color: var(--silver); border: 1px solid #D1D5DB; }
+  .tier-gold { background: var(--gold-bg); color: var(--gold); border: 1px solid #FCD34D; }
+  .tier-platinum { background: var(--platinum-bg); color: var(--platinum); border: 1px solid #CBD5E1; }
+  .tier-diamond { background: var(--diamond-bg); color: var(--diamond); border: 1px solid #BFDBFE; }
+
+  /* PLATFORM VERIFICATION BADGES */
+  .vbadge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; line-height: 1;
+  }
+  .vbadge-pt { background: rgba(0,85,179,0.18); border: 1px solid rgba(0,85,179,0.35); color: #7DB3E8; }
+  .vbadge-lu { background: rgba(201,74,8,0.15); border: 1px solid rgba(201,74,8,0.35); color: #E8926B; }
+  .vbadge-icon {
+    width: 14px; height: 14px; border-radius: 2px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 900;
+  }
+  .vbadge-pt .vbadge-icon { background: rgba(0,85,179,0.3); color: #A8CFEE; }
+  .vbadge-lu .vbadge-icon { background: rgba(201,74,8,0.28); color: #EDB99A; }
+  .vbadge-check { color: #4A9E6B; font-size: 11px; }
+
+  .profile-sub { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
+  .profile-sub-item { font-size: 12px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 4px; }
+
+  /* PROFILE TABS (inside band) */
+  .profile-tabs { display: flex; gap: 0; margin-top: 14px; }
+  .ptab {
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+    padding: 8px 16px 10px; border-bottom: 2px solid transparent; cursor: pointer;
+    text-decoration: none; transition: all 0.12s; white-space: nowrap;
+  }
+  .ptab.active { color: #fff; border-bottom-color: var(--accent-mid); }
+  .ptab:hover:not(.active) { color: rgba(255,255,255,0.8); }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: #252E42; border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 0 20px;
+  }
+  .stats-bar-inner { max-width: 1100px; margin: 0 auto; display: flex; }
+  .sb-stat {
+    padding: 14px 24px 14px 0; display: flex; flex-direction: column; gap: 2px;
+    border-right: 1px solid rgba(255,255,255,0.06); margin-right: 24px;
+  }
+  .sb-stat:last-child { border-right: none; }
+  .sb-val { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -0.3px; }
+  .sb-val.green { color: var(--accent-mid); }
+  .sb-lbl { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.4px; }
+
+  /* QUAL BAR */
+  .qual-bar {
+    background: var(--bg-card); border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+  }
+  .qual-bar-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
+  .qual-label { font-size: 12px; font-weight: 700; color: var(--text); white-space: nowrap; }
+  .qual-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; }
+  .qual-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent-mid) 100%); }
+  .qual-meta { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .qual-status { font-size: 11px; font-weight: 800; color: var(--accent); white-space: nowrap; }
+
+  /* MAIN LAYOUT */
+  .page { max-width: 1100px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 1fr 268px; gap: 20px; }
+
+  /* TAB PANELS */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* SECTION HEADER */
+  .section-hd { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .section-title { font-size: 13px; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 0.4px; }
+  .section-link { font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 600; }
+
+  /* MATCH LOG — Mountain Project tick list style */
+  .match-log { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .ml-thead {
+    display: grid; grid-template-columns: 44px 1fr 80px 72px;
+    padding: 7px 14px; background: #F8F7F3; border-bottom: 1px solid var(--border);
+    font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .ml-row {
+    display: grid; grid-template-columns: 44px 1fr 80px 72px;
+    padding: 10px 14px; border-bottom: 1px solid var(--border); align-items: center;
+    transition: background 0.1s; cursor: pointer;
+  }
+  .ml-row:last-child { border-bottom: none; }
+  .ml-row:hover { background: #FAFAF7; }
+  .ml-result {
+    width: 28px; height: 28px; border-radius: 5px; display: flex;
+    align-items: center; justify-content: center; font-size: 11px; font-weight: 900;
+  }
+  .ml-result.w { background: var(--accent-light); color: var(--accent); border: 1px solid #A7D7B8; }
+  .ml-result.l { background: #FEF2F2; color: var(--red); border: 1px solid #FCA5A5; }
+  .ml-info { }
+  .ml-players { font-size: 12px; font-weight: 600; color: var(--text); }
+  .ml-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; display: flex; gap: 6px; }
+  .ml-score { font-size: 15px; font-weight: 900; color: var(--text); text-align: right; }
+  .ml-score.w { color: var(--accent); }
+  .ml-pts { text-align: right; }
+  .ml-pts-val { font-size: 12px; font-weight: 700; }
+  .ml-pts-val.up { color: var(--accent); }
+  .ml-pts-val.flat { color: var(--text-muted); }
+
+  /* OVERVIEW GRID */
+  .ov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .card-hd { background: #F8F7F3; border-bottom: 1px solid var(--border); padding: 8px 14px; font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-body { padding: 12px 14px; }
+  .kv-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-key { color: var(--text-muted); }
+  .kv-val { font-weight: 700; color: var(--text); }
+  .form-dots { display: flex; gap: 4px; }
+  .form-dot {
+    width: 26px; height: 26px; border-radius: 4px; display: flex;
+    align-items: center; justify-content: center; font-size: 10px; font-weight: 800;
+  }
+  .form-dot.w { background: var(--accent-light); color: var(--accent); border: 1px solid #A7D7B8; }
+  .form-dot.l { background: #FEF2F2; color: var(--red); border: 1px solid #FCA5A5; }
+
+  /* TOURNAMENT LOG */
+  .t-log { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .tl-row { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); gap: 12px; }
+  .tl-row:last-child { border-bottom: none; }
+  .tl-row:hover { background: #FAFAF7; }
+  .tl-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .tl-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .tl-meta span { font-size: 10px; color: var(--text-muted); }
+  .result-badge { font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.3px; }
+  .rb-win { background: var(--gold-bg); color: var(--gold); border: 1px solid #FCD34D; }
+  .rb-2nd { background: var(--silver-bg); color: var(--silver); border: 1px solid #D1D5DB; }
+  .rb-final { background: var(--accent-light); color: var(--accent); border: 1px solid #A7D7B8; }
+  .tl-right { text-align: right; }
+  .tl-place { font-size: 18px; font-weight: 900; }
+  .tl-place.p1 { color: var(--gold); }
+  .tl-place.p2 { color: var(--silver); }
+  .tl-pts { font-size: 11px; font-weight: 700; color: var(--accent); margin-top: 2px; }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 14px; }
+  .sb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .sb-hd { background: #F8F7F3; border-bottom: 1px solid var(--border); padding: 8px 14px; font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .sb-body { padding: 12px 14px; }
+
+  /* STANDING */
+  .standing-block { text-align: center; padding: 10px 0 12px; }
+  .standing-num { font-size: 52px; font-weight: 900; color: var(--accent); line-height: 1; }
+  .standing-of { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .standing-tier { margin-top: 10px; }
+
+  /* PROMO TRACKER */
+  .promo-section { padding: 12px 14px; }
+  .promo-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; }
+  .promo-lbl { color: var(--text-muted); }
+  .promo-val { font-weight: 700; color: var(--text); }
+  .promo-weeks { display: flex; gap: 4px; margin-bottom: 8px; }
+  .wk {
+    flex: 1; height: 30px; border-radius: 4px; display: flex; align-items: center;
+    justify-content: center; font-size: 9px; font-weight: 800; letter-spacing: 0.3px;
+  }
+  .wk.hit { background: var(--accent-light); color: var(--accent); border: 1px solid #A7D7B8; }
+  .wk.miss { background: #F8F7F3; color: var(--text-muted); border: 1px solid var(--border); }
+  .promo-note { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+  .promo-note strong { color: var(--accent); }
+
+  /* VERIFIED RATINGS */
+  .rating-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 14px; border-bottom: 1px solid var(--border);
+  }
+  .rating-row:last-child { border-bottom: none; }
+  .rating-platform { display: flex; align-items: center; gap: 8px; }
+  .rp-dot { width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
+  .rp-dot.pt { background: rgba(0,85,179,0.15); color: #5B9FD8; }
+  .rp-dot.lu { background: rgba(201,74,8,0.15); color: #D47A4A; }
+  .rp-name { font-size: 12px; font-weight: 700; }
+  .rp-name.pt { color: #2563EB; }
+  .rp-name.lu { color: #C94A08; }
+  .rating-right { display: flex; align-items: center; gap: 6px; }
+  .r-val { font-size: 17px; font-weight: 900; }
+  .r-val.pt { color: #2563EB; }
+  .r-val.lu { color: #C94A08; }
+  .r-check { font-size: 10px; font-weight: 800; color: var(--accent); }
+  .rating-note { font-size: 10px; color: var(--text-muted); padding: 8px 14px; line-height: 1.4; border-top: 1px solid var(--border); }
+
+  /* UPCOMING */
+  .upcoming-row { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .upcoming-row:last-child { border-bottom: none; }
+  .upcoming-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .upcoming-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  /* COACHING */
+  .coaching-body { padding: 12px 14px; }
+  .coaching-rate { font-size: 15px; font-weight: 800; color: var(--text); }
+  .coaching-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .coaching-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+  .tag { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 3px; background: #F8F7F3; color: var(--text-muted); border: 1px solid var(--border); }
+  .contact-btn { display: block; margin-top: 12px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 8px 0; border-radius: 6px; text-align: center; text-decoration: none; }
+  .contact-note { font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Padel<em>Z</em></div>
+  <div class="nav-search">
+    <span style="color:rgba(255,255,255,0.35);font-size:13px;">⌕</span>
+    <input type="text" placeholder="Search players, clubs, tournaments…">
+  </div>
+  <div class="nav-links">
+    <a href="landing.html" class="nav-link">Leaderboard</a>
+    <a href="#" class="nav-link">Tournaments</a>
+    <a href="#" class="nav-link">Clubs</a>
+    <a href="#" class="nav-link">Groups</a>
+    <a href="#" class="nav-link">Marketplace</a>
+  </div>
+  <div class="nav-spacer"></div>
+  <a href="#" class="nav-join">Join Free</a>
+</nav>
+
+<!-- PROFILE BAND -->
+<div class="profile-band">
+  <div class="profile-band-inner">
+    <div class="breadcrumb">
+      <a href="landing.html">Leaderboard</a>
+      <span>›</span>
+      <a href="#">Platinum</a>
+      <span>›</span>
+      James Fletcher
+    </div>
+
+    <div class="profile-top">
+      <div class="p-avatar-lg">JF</div>
+      <div class="profile-id">
+        <div class="profile-name">James Fletcher</div>
+        <div class="profile-badges">
+          <span class="tier tier-platinum">Platinum</span>
+          <span class="vbadge vbadge-pt">
+            <span class="vbadge-icon">P</span>
+            Playtomic 4.5
+            <span class="vbadge-check">✓</span>
+          </span>
+          <span class="vbadge vbadge-lu">
+            <span class="vbadge-icon">L</span>
+            Lunda 4.3
+            <span class="vbadge-check">✓</span>
+          </span>
+        </div>
+        <div class="profile-sub">
+          <div class="profile-sub-item">🏠 Blue Tree Padel</div>
+          <div class="profile-sub-item">📍 Phuket</div>
+          <div class="profile-sub-item">🗓 Since Jan 2025</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-tabs">
+      <a href="#" class="ptab active" onclick="setTab('overview');return false;">Overview</a>
+      <a href="#" class="ptab" onclick="setTab('matches');return false;">Match Log</a>
+      <a href="#" class="ptab" onclick="setTab('tournaments');return false;">Tournaments</a>
+      <a href="#" class="ptab" onclick="setTab('coaching');return false;">Coaching</a>
+    </div>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stats-bar-inner">
+    <div class="sb-stat">
+      <div class="sb-val green">#1</div>
+      <div class="sb-lbl">Season Rank</div>
+    </div>
+    <div class="sb-stat">
+      <div class="sb-val">4,820</div>
+      <div class="sb-lbl">Season Pts</div>
+    </div>
+    <div class="sb-stat">
+      <div class="sb-val">48</div>
+      <div class="sb-lbl">Matches</div>
+    </div>
+    <div class="sb-stat">
+      <div class="sb-val green">79%</div>
+      <div class="sb-lbl">Win Rate</div>
+    </div>
+    <div class="sb-stat">
+      <div class="sb-val">4</div>
+      <div class="sb-lbl">Tourns Won</div>
+    </div>
+    <div class="sb-stat">
+      <div class="sb-val green">11W</div>
+      <div class="sb-lbl">Streak</div>
+    </div>
+  </div>
+</div>
+
+<!-- QUAL BAR -->
+<div class="qual-bar">
+  <div class="qual-bar-inner">
+    <div class="qual-label">🏆 Annual Invitational</div>
+    <div class="qual-track"><div class="qual-fill" style="width:82%"></div></div>
+    <div class="qual-meta">Platinum Bracket · #1 of 47</div>
+    <div class="qual-status">On Track ✓</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="page">
+  <div class="main">
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="ov-grid">
+        <div class="card">
+          <div class="card-hd">Playing Style</div>
+          <div class="card-body">
+            <div class="kv-row"><span class="kv-key">Preferred format</span><div style="display:flex;gap:4px;"><span class="tier tier-gold">Mexicano</span><span class="tier tier-silver">Americano</span></div></div>
+            <div class="kv-row"><span class="kv-key">Court side</span><span class="kv-val">Right</span></div>
+            <div class="kv-row"><span class="kv-key">Strongest skill</span><span class="kv-val">Net game</span></div>
+            <div class="kv-row"><span class="kv-key">Languages</span><span class="kv-val">EN, ES</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Season Breakdown</div>
+          <div class="card-body">
+            <div class="kv-row"><span class="kv-key">Tournament matches</span><span class="kv-val">29</span></div>
+            <div class="kv-row"><span class="kv-key">Casual matches</span><span class="kv-val">19</span></div>
+            <div class="kv-row"><span class="kv-key">Unique opponents</span><span class="kv-val">34</span></div>
+            <div class="kv-row"><span class="kv-key">Cross-tier wins (Diamond)</span><span class="kv-val" style="color:var(--accent);">8</span></div>
+            <div class="kv-row"><span class="kv-key">Avg pts / match</span><span class="kv-val">100</span></div>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1/-1;">
+          <div class="card-hd">Recent Form — Last 10</div>
+          <div class="card-body">
+            <div class="form-dots">
+              <div class="form-dot w">W</div><div class="form-dot w">W</div><div class="form-dot w">W</div>
+              <div class="form-dot w">W</div><div class="form-dot l">L</div><div class="form-dot w">W</div>
+              <div class="form-dot w">W</div><div class="form-dot w">W</div><div class="form-dot w">W</div>
+              <div class="form-dot w">W</div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Most recent left · Current streak: <strong style="color:var(--accent);">11 wins</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATCH LOG TAB -->
+    <div class="tab-panel" id="tab-matches">
+      <div class="match-log">
+        <div class="ml-thead">
+          <div></div>
+          <div>Match</div>
+          <div style="text-align:right">Score</div>
+          <div style="text-align:right">Points</div>
+        </div>
+        <div class="ml-row">
+          <div class="ml-result w">W</div>
+          <div class="ml-info">
+            <div class="ml-players">Fletcher &amp; Santos vs Tanaka &amp; Russo</div>
+            <div class="ml-meta"><span>Blue Tree</span>·<span>Mexicano</span>·<span>Platinum/Gold</span>·<span>Today</span></div>
+          </div>
+          <div class="ml-score w">7–4</div>
+          <div class="ml-pts"><div class="ml-pts-val up">+142</div></div>
+        </div>
+        <div class="ml-row">
+          <div class="ml-result w">W</div>
+          <div class="ml-info">
+            <div class="ml-players">Fletcher &amp; Okafor vs Santos &amp; Lindqvist</div>
+            <div class="ml-meta"><span>Destination</span>·<span>Americano</span>·<span>Platinum/Diamond</span>·<span>Yesterday</span></div>
+          </div>
+          <div class="ml-score w">32–27</div>
+          <div class="ml-pts"><div class="ml-pts-val up">+218</div></div>
+        </div>
+        <div class="ml-row">
+          <div class="ml-result w">W</div>
+          <div class="ml-info">
+            <div class="ml-players">Fletcher &amp; Tanaka vs Sousa &amp; Bergman</div>
+            <div class="ml-meta"><span>Xplore</span>·<span>Round Robin</span>·<span>Platinum</span>·<span>16 May</span></div>
+          </div>
+          <div class="ml-score w">6–3</div>
+          <div class="ml-pts"><div class="ml-pts-val up">+98</div></div>
+        </div>
+        <div class="ml-row">
+          <div class="ml-result l">L</div>
+          <div class="ml-info">
+            <div class="ml-players">Santos &amp; Park vs Fletcher &amp; Kowalski</div>
+            <div class="ml-meta"><span>Blue Tree</span>·<span>Mexicano</span>·<span>Diamond/Platinum</span>·<span>15 May</span></div>
+          </div>
+          <div class="ml-score" style="color:var(--red);font-size:15px;font-weight:900;text-align:right;">5–8</div>
+          <div class="ml-pts"><div class="ml-pts-val flat">+25</div></div>
+        </div>
+        <div class="ml-row">
+          <div class="ml-result w">W</div>
+          <div class="ml-info">
+            <div class="ml-players">Fletcher &amp; Lindqvist vs Okafor &amp; Russo</div>
+            <div class="ml-meta"><span>Rawai</span>·<span>Casual</span>·<span>Platinum/Gold</span>·<span>14 May</span></div>
+          </div>
+          <div class="ml-score w">7–3</div>
+          <div class="ml-pts"><div class="ml-pts-val up">+85</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOURNAMENTS TAB -->
+    <div class="tab-panel" id="tab-tournaments">
+      <div class="t-log">
+        <div class="tl-row">
+          <div>
+            <div class="tl-name">Blue Tree Summer Mexicano</div>
+            <div class="tl-meta">
+              <span class="result-badge rb-win">🏆 Winner</span>
+              <span class="tier tier-platinum">Platinum</span>
+              <span>Blue Tree Padel</span>
+              <span>10 May 2025</span>
+              <span>Mexicano · 24 players</span>
+            </div>
+          </div>
+          <div class="tl-right">
+            <div class="tl-place p1">1st</div>
+            <div class="tl-pts">+480 pts</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div>
+            <div class="tl-name">Destination Padel Open</div>
+            <div class="tl-meta">
+              <span class="result-badge rb-final">Finalist</span>
+              <span class="tier tier-platinum">Platinum</span>
+              <span class="tier tier-diamond">Diamond</span>
+              <span>Destination Padel</span>
+              <span>26 Apr 2025</span>
+              <span>Americano · 32 players</span>
+            </div>
+          </div>
+          <div class="tl-right">
+            <div class="tl-place p2">2nd</div>
+            <div class="tl-pts">+310 pts</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div>
+            <div class="tl-name">Xplore Elite Invitational</div>
+            <div class="tl-meta">
+              <span class="result-badge rb-win">🏆 Winner</span>
+              <span class="tier tier-platinum">Platinum</span>
+              <span>Xplore Padel</span>
+              <span>12 Apr 2025</span>
+              <span>Bracket · 16 players</span>
+            </div>
+          </div>
+          <div class="tl-right">
+            <div class="tl-place p1">1st</div>
+            <div class="tl-pts">+520 pts</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COACHING TAB -->
+    <div class="tab-panel" id="tab-coaching">
+      <div class="card">
+        <div class="card-hd" style="display:flex;justify-content:space-between;">
+          <span>Coaching Listing</span>
+          <span style="background:var(--accent-light);color:var(--accent);border:1px solid #A7D7B8;font-size:9px;font-weight:800;padding:1px 7px;border-radius:3px;letter-spacing:0.3px;">AVAILABLE</span>
+        </div>
+        <div class="card-body">
+          <div class="kv-row"><span class="kv-key">Rate</span><span class="kv-val">1,200 THB / hr</span></div>
+          <div class="kv-row"><span class="kv-key">Availability</span><span class="kv-val">Weekdays 8–11 AM</span></div>
+          <div class="kv-row"><span class="kv-key">Home club</span><span class="kv-val">Blue Tree Padel</span></div>
+          <div class="kv-row"><span class="kv-key">Languages</span><span class="kv-val">English, Spanish</span></div>
+          <div class="kv-row"><span class="kv-key">Focus areas</span><div style="display:flex;gap:4px;"><span class="tag">Technique</span><span class="tag">Match prep</span></div></div>
+        </div>
+        <div style="padding:10px 14px;background:#FAFAF7;border-top:1px solid var(--border);font-size:12px;color:var(--text-mid);line-height:1.5;font-style:italic;">
+          "Focused on helping intermediate and advanced players develop a consistent net game and improve tactical decision-making in fast-format tournaments."
+        </div>
+        <div style="padding:12px 14px;border-top:1px solid var(--border);">
+          <a href="#" class="contact-btn">Contact James</a>
+          <div class="contact-note">Direct contact — no booking or payment on-platform</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="sb-card">
+      <div class="sb-hd">Tier Standing</div>
+      <div class="standing-block">
+        <div class="standing-num">1</div>
+        <div class="standing-of">of 47 Platinum players</div>
+        <div class="standing-tier" style="margin-top:8px;"><span class="tier tier-platinum">Platinum</span></div>
+      </div>
+    </div>
+
+    <div class="sb-card">
+      <div class="sb-hd">Promotion Tracker</div>
+      <div class="promo-section">
+        <div class="promo-row"><span class="promo-lbl">Weeks at #1–3</span><span class="promo-val">3 / 4</span></div>
+        <div class="promo-weeks">
+          <div class="wk hit">W1</div>
+          <div class="wk hit">W2</div>
+          <div class="wk hit">W3</div>
+          <div class="wk miss">W4</div>
+        </div>
+        <div class="promo-note">One more week in top 3 → <strong>auto-promote to Diamond</strong></div>
+      </div>
+    </div>
+
+    <div class="sb-card">
+      <div class="sb-hd">Verified External Ratings</div>
+      <div class="rating-row">
+        <div class="rating-platform">
+          <div class="rp-dot pt">P</div>
+          <div class="rp-name pt">Playtomic</div>
+        </div>
+        <div class="rating-right">
+          <div class="r-val pt">4.5</div>
+          <div class="r-check">✓</div>
+        </div>
+      </div>
+      <div class="rating-row">
+        <div class="rating-platform">
+          <div class="rp-dot lu">L</div>
+          <div class="rp-name lu">Lunda</div>
+        </div>
+        <div class="rating-right">
+          <div class="r-val lu">4.3</div>
+          <div class="r-check">✓</div>
+        </div>
+      </div>
+      <div class="rating-note">Screenshot verified · Credibility signal only · Not used in points calculation</div>
+    </div>
+
+    <div class="sb-card">
+      <div class="sb-hd">Upcoming</div>
+      <div class="upcoming-row">
+        <div class="upcoming-name">Xplore Elite Challenge</div>
+        <div class="upcoming-meta">Sat 31 May · Platinum+ · Round Robin</div>
+      </div>
+      <div class="upcoming-row">
+        <div class="upcoming-name">Blue Tree Weekly Mexicano</div>
+        <div class="upcoming-meta">Sat 7 Jun · Platinum · Mexicano</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function setTab(name) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>

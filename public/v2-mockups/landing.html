@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Padel Z — Phuket Padel Community</title>
+<style>
+  :root {
+    --nav-bg: #1C2333;
+    --bg: #F4F3EF;
+    --bg-card: #FFFFFF;
+    --bg-dark: #1C2333;
+    --accent: #2E7D52;
+    --accent-light: #EBF5EE;
+    --accent-mid: #4A9E6B;
+    --text: #1A1A1A;
+    --text-mid: #4A4A4A;
+    --text-muted: #888888;
+    --border: #E2E0D8;
+    --border-dark: #C8C5BB;
+    --bronze: #9C6B2E;
+    --bronze-bg: #FDF3E7;
+    --silver: #6B7280;
+    --silver-bg: #F3F4F6;
+    --gold: #B45309;
+    --gold-bg: #FFFBEB;
+    --platinum: #4B5563;
+    --platinum-bg: #F1F5F9;
+    --diamond: #1D4ED8;
+    --diamond-bg: #EFF6FF;
+    --red: #DC2626;
+    --red-bg: #FEF2F2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.5; font-size: 14px; }
+
+  /* NAV */
+  nav {
+    background: var(--nav-bg); position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; height: 52px; padding: 0 20px; gap: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-logo { color: #fff; font-size: 17px; font-weight: 800; letter-spacing: -0.3px; white-space: nowrap; }
+  .nav-logo em { color: #4A9E6B; font-style: normal; }
+  .nav-search {
+    flex: 1; max-width: 320px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px; height: 32px; display: flex; align-items: center; padding: 0 10px; gap: 8px;
+  }
+  .nav-search input { background: none; border: none; outline: none; color: #fff; font-size: 13px; width: 100%; }
+  .nav-search input::placeholder { color: rgba(255,255,255,0.35); }
+  .nav-search-icon { color: rgba(255,255,255,0.35); font-size: 13px; }
+  .nav-links { display: flex; gap: 2px; margin-left: 8px; }
+  .nav-link { color: rgba(255,255,255,0.65); font-size: 13px; font-weight: 500; text-decoration: none; padding: 5px 12px; border-radius: 5px; transition: all 0.12s; white-space: nowrap; }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  .nav-link.active { color: #fff; }
+  .nav-spacer { flex: 1; }
+  .nav-join { background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 5px; text-decoration: none; white-space: nowrap; }
+
+  /* SUBNAV */
+  .subnav {
+    background: var(--bg-card); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 20px; height: 40px; gap: 0;
+  }
+  .subnav-inner { max-width: 1100px; width: 100%; margin: 0 auto; display: flex; align-items: center; gap: 0; }
+  .subnav-tab {
+    font-size: 13px; font-weight: 600; color: var(--text-muted); padding: 0 14px; height: 40px;
+    display: flex; align-items: center; border-bottom: 2px solid transparent; cursor: pointer;
+    text-decoration: none; transition: all 0.12s; white-space: nowrap;
+  }
+  .subnav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .subnav-tab:hover:not(.active) { color: var(--text); }
+  .subnav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .period-toggle { display: flex; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+  .period-btn { background: none; border: none; font-size: 11px; font-weight: 700; color: var(--text-muted); padding: 4px 10px; cursor: pointer; transition: all 0.12s; }
+  .period-btn.active { background: var(--nav-bg); color: #fff; }
+  .period-btn:not(:last-child) { border-right: 1px solid var(--border); }
+
+  /* PAGE LAYOUT */
+  .page { max-width: 1100px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+
+  /* SECTION HEADER */
+  .section-hd { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .section-title { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
+  .section-link { font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 600; }
+
+  /* STATS STRIP */
+  .stats-strip {
+    background: var(--nav-bg); padding: 16px 20px;
+  }
+  .stats-strip-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 40px; align-items: center; }
+  .strip-stat { display: flex; flex-direction: column; gap: 2px; }
+  .strip-val { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+  .strip-lbl { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.5px; }
+  .strip-sep { width: 1px; height: 36px; background: rgba(255,255,255,0.1); }
+  .strip-tagline { margin-left: auto; font-size: 13px; color: rgba(255,255,255,0.5); font-style: italic; }
+
+  /* LEADERBOARD TABLE */
+  .lb-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .lb-thead {
+    display: grid; grid-template-columns: 36px 1fr 72px 72px 64px;
+    padding: 8px 14px; background: #F8F7F3; border-bottom: 1px solid var(--border);
+    font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .lb-row {
+    display: grid; grid-template-columns: 36px 1fr 72px 72px 64px;
+    padding: 10px 14px; border-bottom: 1px solid var(--border); align-items: center;
+    transition: background 0.1s; cursor: pointer;
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row:hover { background: #FAFAF7; }
+  .lb-row.top { background: #FAFFF9; }
+  .col-r { text-align: right; }
+  .col-rank { font-size: 13px; font-weight: 800; color: var(--text-muted); }
+  .col-rank.r1 { color: var(--accent); }
+  .col-rank.r2 { color: #6B7280; }
+  .col-rank.r3 { color: var(--bronze); }
+
+  .player-cell { display: flex; align-items: center; gap: 10px; }
+  .p-avatar { width: 30px; height: 30px; border-radius: 50%; background: #E8E6DE; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--text-mid); flex-shrink: 0; }
+  .p-name { font-size: 13px; font-weight: 700; color: var(--text); text-decoration: none; }
+  .p-name:hover { color: var(--accent); }
+  .p-meta { display: flex; align-items: center; gap: 5px; margin-top: 1px; }
+
+  /* TIER BADGES — Mountain Project grade badge style */
+  .tier {
+    font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 3px;
+    letter-spacing: 0.4px; text-transform: uppercase; display: inline-block;
+  }
+  .tier-bronze { background: var(--bronze-bg); color: var(--bronze); border: 1px solid #E8C99A; }
+  .tier-silver { background: var(--silver-bg); color: var(--silver); border: 1px solid #D1D5DB; }
+  .tier-gold { background: var(--gold-bg); color: var(--gold); border: 1px solid #FCD34D; }
+  .tier-platinum { background: var(--platinum-bg); color: var(--platinum); border: 1px solid #CBD5E1; }
+  .tier-diamond { background: var(--diamond-bg); color: var(--diamond); border: 1px solid #BFDBFE; }
+
+  .col-pts { font-size: 13px; font-weight: 700; color: var(--text); text-align: right; }
+  .col-trend { font-size: 11px; font-weight: 700; text-align: right; }
+  .trend-up { color: var(--accent); }
+  .trend-dn { color: var(--red); }
+  .trend-eq { color: var(--text-muted); }
+  .col-wins { font-size: 13px; color: var(--text-mid); text-align: right; }
+  .col-club { font-size: 11px; color: var(--text-muted); }
+
+  /* TIER FILTER ROW */
+  .tier-filters { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tf {
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--border); color: var(--text-muted); background: var(--bg-card);
+    transition: all 0.12s; letter-spacing: 0.2px;
+  }
+  .tf.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .tf.all.active { background: var(--nav-bg); color: #fff; border-color: var(--nav-bg); }
+
+  /* LIVE MATCH STRIP */
+  .live-strip { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+  .live-strip-hd {
+    background: #F8F7F3; border-bottom: 1px solid var(--border); padding: 8px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .live-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .live-dot { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: #DC2626; }
+  .live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #DC2626; animation: blink 1.4s infinite; display: block; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .live-row { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); gap: 12px; }
+  .live-row:last-child { border-bottom: none; }
+  .live-club { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; min-width: 100px; }
+  .live-teams { flex: 1; display: flex; align-items: center; gap: 8px; }
+  .live-team { font-size: 12px; font-weight: 600; color: var(--text); }
+  .live-vs { font-size: 10px; color: var(--text-muted); font-weight: 600; }
+  .live-score { font-size: 15px; font-weight: 900; color: var(--text); display: flex; gap: 6px; align-items: center; }
+  .score-w { color: var(--accent); }
+  .score-l { color: var(--text-muted); }
+  .score-sep { color: var(--border-dark); font-weight: 400; }
+
+  /* TOURNAMENT SECTION */
+  .t-list { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .t-row { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); gap: 12px; transition: background 0.1s; cursor: pointer; }
+  .t-row:last-child { border-bottom: none; }
+  .t-row:hover { background: #FAFAF7; }
+  .t-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .t-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .t-meta-item { font-size: 11px; color: var(--text-muted); }
+  .t-status { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.4px; text-transform: uppercase; }
+  .s-open { background: var(--accent-light); color: var(--accent); border: 1px solid #A7D7B8; }
+  .s-filling { background: var(--gold-bg); color: var(--gold); border: 1px solid #FCD34D; }
+  .s-full { background: var(--red-bg); color: var(--red); border: 1px solid #FCA5A5; }
+  .t-right { text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .t-spots { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .t-register { font-size: 12px; font-weight: 700; color: var(--accent); text-decoration: none; }
+  .t-fill { width: 80px; height: 4px; background: var(--border); border-radius: 2px; margin-top: 4px; }
+  .t-fill-bar { height: 100%; border-radius: 2px; background: var(--accent); }
+
+  /* RIGHT SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .sb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .sb-hd { background: #F8F7F3; border-bottom: 1px solid var(--border); padding: 8px 14px; font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .sb-body { padding: 12px 14px; }
+
+  /* CLUB LIST */
+  .club-row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+  .club-row:last-child { border-bottom: none; }
+  .club-row:hover { background: #FAFAF7; }
+  .club-icon { width: 32px; height: 32px; border-radius: 6px; background: #EBF5EE; border: 1px solid #A7D7B8; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .club-info { flex: 1; }
+  .club-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .club-meta { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .club-courts { font-size: 11px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+
+  /* CALENDAR SIDEBAR */
+  .cal-row { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .cal-row:last-child { border-bottom: none; }
+  .cal-date { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+  .cal-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .cal-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+
+  /* HERO BAND */
+  .hero-band {
+    background: var(--nav-bg); padding: 28px 20px 24px;
+    border-bottom: 3px solid var(--accent);
+  }
+  .hero-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+  .hero-text h1 { font-size: 32px; font-weight: 900; color: #fff; letter-spacing: -0.8px; line-height: 1.15; }
+  .hero-text h1 em { color: var(--accent-mid); font-style: normal; }
+  .hero-text p { color: rgba(255,255,255,0.55); font-size: 14px; margin-top: 10px; line-height: 1.6; }
+  .hero-actions { display: flex; gap: 8px; margin-top: 18px; }
+  .btn-primary { background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; padding: 9px 20px; border-radius: 6px; text-decoration: none; }
+  .btn-outline { background: transparent; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 6px; text-decoration: none; border: 1px solid rgba(255,255,255,0.2); }
+  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255,255,255,0.08); border-radius: 8px; overflow: hidden; }
+  .hero-stat { background: rgba(255,255,255,0.04); padding: 16px; text-align: center; }
+  .hs-val { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+  .hs-lbl { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; }
+
+  footer { border-top: 1px solid var(--border); padding: 20px; text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Padel<em>Z</em></div>
+  <div class="nav-search">
+    <span class="nav-search-icon">⌕</span>
+    <input type="text" placeholder="Search players, clubs, tournaments…">
+  </div>
+  <div class="nav-links">
+    <a href="#" class="nav-link active">Leaderboard</a>
+    <a href="#" class="nav-link">Tournaments</a>
+    <a href="#" class="nav-link">Clubs</a>
+    <a href="#" class="nav-link">Groups</a>
+    <a href="#" class="nav-link">Marketplace</a>
+  </div>
+  <div class="nav-spacer"></div>
+  <a href="#" class="nav-join">Join Free</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero-band">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1>Phuket Padel,<br><em>All in One Place</em></h1>
+      <p>Tournament infrastructure, community leaderboard, and the full Phuket padel calendar — free for players and clubs.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn-primary">Create Your Profile</a>
+        <a href="#" class="btn-outline">Browse Tournaments</a>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hs-val">347</div><div class="hs-lbl">Players</div></div>
+      <div class="hero-stat"><div class="hs-val">5</div><div class="hs-lbl">Clubs</div></div>
+      <div class="hero-stat"><div class="hs-val">12</div><div class="hs-lbl">Tournaments</div></div>
+      <div class="hero-stat"><div class="hs-val">1.4k</div><div class="hs-lbl">Matches</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBNAV -->
+<div class="subnav">
+  <div class="subnav-inner">
+    <a href="#" class="subnav-tab active" onclick="setTab(this,'points');return false;">Total Points</a>
+    <a href="#" class="subnav-tab" onclick="setTab(this,'wins');return false;">Wins</a>
+    <a href="#" class="subnav-tab" onclick="setTab(this,'winpct');return false;">Win %</a>
+    <a href="#" class="subnav-tab" onclick="setTab(this,'playtime');return false;">Play Time</a>
+    <a href="#" class="subnav-tab" onclick="setTab(this,'trophies');return false;">Tournaments</a>
+    <a href="#" class="subnav-tab" onclick="setTab(this,'streak');return false;">Hot Streak</a>
+    <div class="subnav-right">
+      <div class="period-toggle">
+        <button class="period-btn active">Week</button>
+        <button class="period-btn">Month</button>
+        <button class="period-btn">Season</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="page">
+  <div class="main">
+
+    <!-- LIVE MATCHES -->
+    <div class="live-strip" style="margin-bottom:16px;">
+      <div class="live-strip-hd">
+        <span class="live-label">Live Matches</span>
+        <span class="live-dot">3 in progress</span>
+      </div>
+      <div class="live-row">
+        <div class="live-club">Blue Tree Padel</div>
+        <div class="live-teams">
+          <span class="live-team">J. Fletcher &amp; M. Santos</span>
+          <span class="live-vs">vs</span>
+          <span class="live-team">K. Tanaka &amp; P. Russo</span>
+        </div>
+        <span class="tier tier-gold">Gold</span>
+        <div class="live-score">
+          <span class="score-w">7</span><span class="score-sep">–</span><span class="score-l">4</span>
+        </div>
+      </div>
+      <div class="live-row">
+        <div class="live-club">Destination Padel</div>
+        <div class="live-teams">
+          <span class="live-team">A. Lindqvist &amp; T. Kowalski</span>
+          <span class="live-vs">vs</span>
+          <span class="live-team">N. Park &amp; R. Chen</span>
+        </div>
+        <span class="tier tier-silver">Silver</span>
+        <div class="live-score">
+          <span class="score-w">11</span><span class="score-sep">–</span><span class="score-l">9</span>
+        </div>
+      </div>
+      <div class="live-row">
+        <div class="live-club">Xplore Padel</div>
+        <div class="live-teams">
+          <span class="live-team">C. Müller &amp; D. Okafor</span>
+          <span class="live-vs">vs</span>
+          <span class="live-team">E. Sousa &amp; F. Bergman</span>
+        </div>
+        <span class="tier tier-platinum">Platinum</span>
+        <div class="live-score">
+          <span class="score-w">5</span><span class="score-sep">–</span><span class="score-l">3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="section-hd">
+      <span class="section-title">Season Leaderboard</span>
+      <a href="#" class="section-link">Full board →</a>
+    </div>
+
+    <div class="tier-filters" style="margin-bottom:10px;">
+      <button class="tf all active" onclick="activeTf(this)">All Tiers</button>
+      <button class="tf" onclick="activeTf(this)"><span class="tier tier-bronze">Bronze</span></button>
+      <button class="tf" onclick="activeTf(this)"><span class="tier tier-silver">Silver</span></button>
+      <button class="tf" onclick="activeTf(this)"><span class="tier tier-gold">Gold</span></button>
+      <button class="tf" onclick="activeTf(this)"><span class="tier tier-platinum">Platinum</span></button>
+      <button class="tf" onclick="activeTf(this)"><span class="tier tier-diamond">Diamond</span></button>
+    </div>
+
+    <div class="lb-wrap">
+      <div class="lb-thead">
+        <div>#</div>
+        <div>Player</div>
+        <div class="col-r" id="col-hd">Points</div>
+        <div class="col-r">Wins</div>
+        <div class="col-r">7d</div>
+      </div>
+
+      <div class="lb-row top">
+        <div class="col-rank r1">1</div>
+        <div class="player-cell">
+          <div class="p-avatar">JF</div>
+          <div>
+            <a href="profile.html" class="p-name">James Fletcher</a>
+            <div class="p-meta"><span class="tier tier-platinum">Platinum</span><span class="col-club">Blue Tree Padel</span></div>
+          </div>
+        </div>
+        <div class="col-pts" data-points="4,820" data-wins="38" data-winpct="79%" data-playtime="62h" data-trophies="4" data-streak="11W">4,820</div>
+        <div class="col-wins">38</div>
+        <div class="col-trend trend-up">+240</div>
+      </div>
+
+      <div class="lb-row">
+        <div class="col-rank r2">2</div>
+        <div class="player-cell">
+          <div class="p-avatar">CS</div>
+          <div>
+            <a href="#" class="p-name">Carlos Santos</a>
+            <div class="p-meta"><span class="tier tier-diamond">Diamond</span><span class="col-club">Destination Padel</span></div>
+          </div>
+        </div>
+        <div class="col-pts" data-points="4,610" data-wins="41" data-winpct="74%" data-playtime="71h" data-trophies="5" data-streak="7W">4,610</div>
+        <div class="col-wins">41</div>
+        <div class="col-trend trend-up">+180</div>
+      </div>
+
+      <div class="lb-row">
+        <div class="col-rank r3">3</div>
+        <div class="player-cell">
+          <div class="p-avatar">AL</div>
+          <div>
+            <a href="#" class="p-name">Anna Lindqvist</a>
+            <div class="p-meta"><span class="tier tier-platinum">Platinum</span><span class="col-club">Xplore Padel</span></div>
+          </div>
+        </div>
+        <div class="col-pts" data-points="4,290" data-wins="34" data-winpct="71%" data-playtime="58h" data-trophies="3" data-streak="5W">4,290</div>
+        <div class="col-wins">34</div>
+        <div class="col-trend trend-up">+95</div>
+      </div>
+
+      <div class="lb-row">
+        <div class="col-rank">4</div>
+        <div class="player-cell">
+          <div class="p-avatar">KT</div>
+          <div>
+            <a href="#" class="p-name">Kenji Tanaka</a>
+            <div class="p-meta"><span class="tier tier-gold">Gold</span><span class="col-club">Rawai Padel</span></div>
+          </div>
+        </div>
+        <div class="col-pts" data-points="3,870" data-wins="29" data-winpct="68%" data-playtime="49h" data-trophies="2" data-streak="3W">3,870</div>
+        <div class="col-wins">29</div>
+        <div class="col-trend trend-eq">—</div>
+      </div>
+
+      <div class="lb-row">
+        <div class="col-rank">5</div>
+        <div class="player-cell">
+          <div class="p-avatar">PR</div>
+          <div>
+            <a href="#" class="p-name">Priya Russo</a>
+            <div class="p-meta"><span class="tier tier-gold">Gold</span><span class="col-club">Blue Tree Padel</span></div>
+          </div>
+        </div>
+        <div class="col-pts" data-points="3,540" data-wins="26" data-winpct="65%" data-playtime="44h" data-trophies="1" data-streak="2W">3,540</div>
+        <div class="col-wins">26</div>
+        <div class="col-trend trend-dn">−60</div>
+      </div>
+
+      <div class="lb-row">
+        <div class="col-rank">6</div>
+        <div class="player-cell">
+          <div class="p-avatar">DO</div>
+          <div>
+            <a href="#" class="p-name">David Okafor</a>
+            <div class="p-meta"><span class="tier tier-platinum">Platinum</span><span class="col-club">Destination Padel</span></div>
+          </div>
+        </div>
+        <div class="col-pts" data-points="3,310" data-wins="24" data-winpct="63%" data-playtime="41h" data-trophies="2" data-streak="4W">3,310</div>
+        <div class="col-wins">24</div>
+        <div class="col-trend trend-up">+120</div>
+      </div>
+
+      <div class="lb-row">
+        <div class="col-rank">7</div>
+        <div class="player-cell">
+          <div class="p-avatar">NP</div>
+          <div>
+            <a href="#" class="p-name">Nara Park</a>
+            <div class="p-meta"><span class="tier tier-silver">Silver</span><span class="col-club">Xplore Padel</span></div>
+          </div>
+        </div>
+        <div class="col-pts" data-points="2,980" data-wins="21" data-winpct="61%" data-playtime="37h" data-streak="6W" data-trophies="1">2,980</div>
+        <div class="col-wins">21</div>
+        <div class="col-trend trend-up">+200</div>
+      </div>
+
+      <div class="lb-row">
+        <div class="col-rank">8</div>
+        <div class="player-cell">
+          <div class="p-avatar">TK</div>
+          <div>
+            <a href="#" class="p-name">Tomasz Kowalski</a>
+            <div class="p-meta"><span class="tier tier-gold">Gold</span><span class="col-club">Rawai Padel</span></div>
+          </div>
+        </div>
+        <div class="col-pts" data-points="2,740" data-wins="19" data-winpct="58%" data-playtime="33h" data-trophies="0" data-streak="1W">2,740</div>
+        <div class="col-wins">19</div>
+        <div class="col-trend trend-eq">—</div>
+      </div>
+    </div>
+
+    <!-- TOURNAMENTS -->
+    <div class="section-hd" style="margin-top:24px;">
+      <span class="section-title">Upcoming Tournaments</span>
+      <a href="#" class="section-link">Full calendar →</a>
+    </div>
+    <div class="t-list">
+      <div class="t-row">
+        <div>
+          <div class="t-name">Blue Tree Summer Open</div>
+          <div class="t-meta">
+            <span class="t-status s-open">Open</span>
+            <span class="tier tier-gold">Gold</span>
+            <span class="t-meta-item">📅 Sat 24 May, 9 AM</span>
+            <span class="t-meta-item">📍 Blue Tree Padel</span>
+            <span class="t-meta-item">Americano</span>
+          </div>
+        </div>
+        <div class="t-right">
+          <div class="t-spots">14 / 24 players</div>
+          <div class="t-fill"><div class="t-fill-bar" style="width:58%"></div></div>
+          <a href="#" class="t-register">Register →</a>
+        </div>
+      </div>
+      <div class="t-row">
+        <div>
+          <div class="t-name">Destination Padel Mexicano</div>
+          <div class="t-meta">
+            <span class="t-status s-open">Open</span>
+            <span class="tier tier-silver">Silver</span>
+            <span class="t-meta-item">📅 Sun 25 May, 8 AM</span>
+            <span class="t-meta-item">📍 Destination Padel</span>
+            <span class="t-meta-item">Mexicano</span>
+          </div>
+        </div>
+        <div class="t-right">
+          <div class="t-spots">8 / 16 players</div>
+          <div class="t-fill"><div class="t-fill-bar" style="width:50%"></div></div>
+          <a href="#" class="t-register">Register →</a>
+        </div>
+      </div>
+      <div class="t-row">
+        <div>
+          <div class="t-name">Xplore Elite Challenge</div>
+          <div class="t-meta">
+            <span class="t-status s-filling">Filling Fast</span>
+            <span class="tier tier-platinum">Platinum+</span>
+            <span class="t-meta-item">📅 Sat 31 May, 10 AM</span>
+            <span class="t-meta-item">📍 Xplore Padel</span>
+            <span class="t-meta-item">Round Robin + Bracket</span>
+          </div>
+        </div>
+        <div class="t-right">
+          <div class="t-spots">15 / 16 players</div>
+          <div class="t-fill"><div class="t-fill-bar" style="width:94%;background:var(--gold);"></div></div>
+          <a href="#" class="t-register">Register →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-card">
+      <div class="sb-hd">Partner Clubs</div>
+      <div class="club-row">
+        <div class="club-icon">🎾</div>
+        <div class="club-info">
+          <div class="club-name">Destination Padel</div>
+          <div class="club-meta">Cherngtalay · 2 events this month</div>
+        </div>
+        <div class="club-courts">6 courts</div>
+      </div>
+      <div class="club-row">
+        <div class="club-icon">🔵</div>
+        <div class="club-info">
+          <div class="club-name">Blue Tree Padel</div>
+          <div class="club-meta">Thalang · 3 events this month</div>
+        </div>
+        <div class="club-courts">4 courts</div>
+      </div>
+      <div class="club-row">
+        <div class="club-icon">⚡</div>
+        <div class="club-info">
+          <div class="club-name">Xplore Padel</div>
+          <div class="club-meta">Kathu · 1 event this month</div>
+        </div>
+        <div class="club-courts">4 courts</div>
+      </div>
+      <div class="club-row">
+        <div class="club-icon">🏭</div>
+        <div class="club-info">
+          <div class="club-name">Warehouse Padel</div>
+          <div class="club-meta">Opening soon</div>
+        </div>
+        <div class="club-courts">—</div>
+      </div>
+      <div class="club-row">
+        <div class="club-icon">🌊</div>
+        <div class="club-info">
+          <div class="club-name">Rawai Padel</div>
+          <div class="club-meta">Rawai · 1 event this month</div>
+        </div>
+        <div class="club-courts">3 courts</div>
+      </div>
+    </div>
+
+    <div class="sb-card">
+      <div class="sb-hd">Upcoming — Phuket</div>
+      <div class="cal-row">
+        <div class="cal-date">Sat 24 May</div>
+        <div class="cal-name">Blue Tree Summer Open</div>
+        <div class="cal-meta"><span class="tier tier-gold">Gold</span><span style="font-size:10px;color:var(--text-muted);">Americano</span></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-date">Sun 25 May</div>
+        <div class="cal-name">Destination Mexicano</div>
+        <div class="cal-meta"><span class="tier tier-silver">Silver</span><span style="font-size:10px;color:var(--text-muted);">Mexicano</span></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-date">Sat 31 May</div>
+        <div class="cal-name">Xplore Elite Challenge</div>
+        <div class="cal-meta"><span class="tier tier-platinum">Platinum+</span><span style="font-size:10px;color:var(--accent);font-weight:700;">1 spot left</span></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-date">7 Jun</div>
+        <div class="cal-name">Rawai Weekly Americano</div>
+        <div class="cal-meta"><span class="tier tier-bronze">Bronze</span><span class="tier tier-silver" style="margin-left:2px;">Silver</span></div>
+      </div>
+    </div>
+
+    <div class="sb-card">
+      <div class="sb-hd">Thailand &amp; International</div>
+      <div class="cal-row">
+        <div class="cal-date">14–15 Jun</div>
+        <div class="cal-name">Phuket Padel Series #3</div>
+        <div class="cal-meta"><span style="font-size:10px;color:var(--text-muted);">All levels · Sign up →</span></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-date">28–29 Jun</div>
+        <div class="cal-name">Thailand Padel Series — BKK</div>
+        <div class="cal-meta"><span style="font-size:10px;color:var(--text-muted);">Bangkok · Sign up →</span></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-date">Aug 2025</div>
+        <div class="cal-name">Premier Padel — Asia</div>
+        <div class="cal-meta"><span style="font-size:10px;color:var(--text-muted);">TBC · Watch →</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>© 2025 Padel Z · Phuket Padel Community · Free for players and clubs · Built by PROXYZ Studio</footer>
+
+<script>
+  const colMap = {
+    points:   'Points',
+    wins:     'Wins',
+    winpct:   'Win %',
+    playtime: 'Play Time',
+    trophies: 'Tournaments',
+    streak:   'Streak',
+  };
+  function setTab(el, key) {
+    document.querySelectorAll('.subnav-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('col-hd').textContent = colMap[key];
+    document.querySelectorAll('.col-pts').forEach(cell => {
+      cell.textContent = cell.dataset[key] || '—';
+    });
+  }
+  function activeTf(el) {
+    document.querySelectorAll('.tf').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

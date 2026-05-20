@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Americano — Blue Tree Padel · Padel Z</title>
+<style>
+  :root {
+    --nav-bg: #1C2333;
+    --bg: #F4F3EF;
+    --bg-card: #FFFFFF;
+    --accent: #2E7D52;
+    --accent-light: #EBF5EE;
+    --accent-mid: #4A9E6B;
+    --text: #1A1A1A;
+    --text-mid: #4A4A4A;
+    --text-muted: #888888;
+    --border: #E2E0D8;
+    --border-dark: #C8C5BB;
+    --bronze: #9C6B2E; --bronze-bg: #FDF3E7;
+    --silver: #6B7280; --silver-bg: #F3F4F6;
+    --gold: #B45309; --gold-bg: #FFFBEB;
+    --platinum: #4B5563; --platinum-bg: #F1F5F9;
+    --diamond: #1D4ED8; --diamond-bg: #EFF6FF;
+    --red: #DC2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.5; font-size: 14px; }
+
+  /* NAV */
+  nav {
+    background: var(--nav-bg); position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; height: 52px; padding: 0 20px; gap: 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-logo { color: #fff; font-size: 17px; font-weight: 800; letter-spacing: -0.3px; text-decoration: none; }
+  .nav-logo em { color: #4A9E6B; font-style: normal; }
+  .nav-search {
+    flex: 1; max-width: 320px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px; height: 32px; display: flex; align-items: center; padding: 0 10px; gap: 8px;
+  }
+  .nav-search input { background: none; border: none; outline: none; color: #fff; font-size: 13px; width: 100%; }
+  .nav-search input::placeholder { color: rgba(255,255,255,0.35); }
+  .nav-links { display: flex; gap: 2px; }
+  .nav-link { color: rgba(255,255,255,0.65); font-size: 13px; font-weight: 500; text-decoration: none; padding: 5px 12px; border-radius: 5px; }
+  .nav-link:hover, .nav-link.active { color: #fff; }
+  .nav-spacer { flex: 1; }
+  .nav-join { background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 5px; text-decoration: none; }
+
+  /* PAGE HEADER */
+  .page-header { background: var(--nav-bg); border-bottom: 3px solid var(--accent); padding: 20px 20px 20px; }
+  .page-header-inner { max-width: 1100px; margin: 0 auto; }
+  .breadcrumb { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .breadcrumb a { color: rgba(255,255,255,0.4); text-decoration: none; }
+  .breadcrumb a:hover { color: rgba(255,255,255,0.7); }
+
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+  .header-left { flex: 1; }
+  .header-badges { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .type-badge { font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .tb-game { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+  .tier { font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 3px; letter-spacing: 0.4px; text-transform: uppercase; display: inline-block; }
+  .tier-platinum { background: var(--platinum-bg); color: var(--platinum); border: 1px solid #CBD5E1; }
+  .tier-gold { background: var(--gold-bg); color: var(--gold); border: 1px solid #FCD34D; }
+  .tier-silver { background: var(--silver-bg); color: var(--silver); border: 1px solid #D1D5DB; }
+  .open-badge { font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 3px; letter-spacing: 0.5px; background: var(--accent-light); color: var(--accent); border: 1px solid #A7D7B8; }
+
+  .header-title { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -0.5px; line-height: 1.2; }
+  .header-meta { display: flex; align-items: center; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+  .hm-item { font-size: 13px; color: rgba(255,255,255,0.55); display: flex; align-items: center; gap: 5px; }
+  .hm-item strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+  .hm-sep { color: rgba(255,255,255,0.2); }
+
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+  .time-display { text-align: right; }
+  .time-big { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+  .time-date { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+  .time-countdown { font-size: 11px; font-weight: 700; color: var(--accent-mid); margin-top: 3px; }
+
+  .join-btn-header {
+    background: var(--accent); color: #fff; font-size: 15px; font-weight: 800;
+    padding: 12px 32px; border-radius: 7px; border: none; cursor: pointer;
+    transition: background 0.12s; white-space: nowrap;
+  }
+  .join-btn-header:hover { background: #256644; }
+  .join-btn-header.joined { background: var(--accent-light); color: var(--accent); border: 2px solid var(--accent-mid); cursor: default; }
+  .spots-note { font-size: 11px; color: rgba(255,255,255,0.4); text-align: right; }
+
+  /* MAIN LAYOUT */
+  .page { max-width: 1100px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
+
+  /* CARDS */
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+  .card:last-child { margin-bottom: 0; }
+  .card-hd { background: #F8F7F3; border-bottom: 1px solid var(--border); padding: 9px 16px; font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between; }
+  .card-body { padding: 16px; }
+
+  /* PLAYER SLOTS — big version */
+  .slots-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; }
+  .team { display: flex; flex-direction: column; gap: 10px; }
+  .team-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .slot-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border); background: #FAFAF7; transition: border-color 0.12s; }
+  .slot-row.empty { border-style: dashed; background: transparent; cursor: pointer; }
+  .slot-row.empty:hover { border-color: var(--accent-mid); background: var(--accent-light); }
+  .slot-row.you { border-color: var(--accent-mid); background: var(--accent-light); }
+
+  .slot-av { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; }
+  .slot-av.filled { background: #E8E6DE; color: var(--text-mid); border: 2px solid var(--border-dark); }
+  .slot-av.filled.you { background: var(--accent-light); color: var(--accent); border: 2px solid var(--accent-mid); }
+  .slot-av.empty { background: transparent; color: var(--border-dark); border: 2px dashed var(--border-dark); font-size: 20px; font-weight: 300; }
+  .slot-av.empty:hover { border-color: var(--accent-mid); color: var(--accent); }
+
+  .slot-info { flex: 1; }
+  .slot-name-lg { font-size: 13px; font-weight: 700; color: var(--text); }
+  .slot-name-lg.empty { color: var(--text-muted); font-weight: 400; font-style: italic; }
+  .slot-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; display: flex; gap: 6px; align-items: center; }
+
+  .vs-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .vs-text { font-size: 18px; font-weight: 900; color: var(--border-dark); }
+  .vs-line { width: 1px; height: 60px; background: var(--border); }
+
+  .join-slot-btn {
+    font-size: 12px; font-weight: 700; color: var(--text-muted); background: none; border: none;
+    cursor: pointer; padding: 0; flex-shrink: 0;
+  }
+  .join-slot-btn:hover { color: var(--accent); }
+
+  /* SCORING PREVIEW */
+  .score-preview { display: flex; flex-direction: column; gap: 8px; }
+  .sp-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .sp-row:last-child { border-bottom: none; }
+  .sp-label { color: var(--text-muted); }
+  .sp-val { font-weight: 700; color: var(--text); }
+  .sp-val.green { color: var(--accent); }
+  .sp-val.muted { color: var(--text-muted); font-weight: 400; }
+  .sp-total { background: var(--accent-light); border: 1px solid #A7D7B8; border-radius: 6px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+  .sp-total-label { font-size: 12px; font-weight: 700; color: var(--accent); }
+  .sp-total-val { font-size: 18px; font-weight: 900; color: var(--accent); }
+
+  /* NOTES */
+  .notes-body { font-size: 13px; color: var(--text-mid); line-height: 1.7; padding: 14px 16px; }
+  .notes-body strong { color: var(--text); }
+
+  /* ACTIVITY / COMMENTS */
+  .comment-list { display: flex; flex-direction: column; }
+  .comment-row { display: flex; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .comment-row:last-child { border-bottom: none; }
+  .c-avatar { width: 30px; height: 30px; border-radius: 50%; background: #E8E6DE; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: var(--text-muted); flex-shrink: 0; }
+  .c-body { flex: 1; }
+  .c-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+  .c-name { font-size: 12px; font-weight: 800; color: var(--text); }
+  .c-time { font-size: 11px; color: var(--text-muted); }
+  .c-text { font-size: 13px; color: var(--text-mid); line-height: 1.5; }
+
+  .comment-input-row { display: flex; gap: 10px; padding: 12px 16px; background: #FAFAF7; border-top: 1px solid var(--border); }
+  .c-input-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-light); border: 2px solid var(--accent-mid); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+  .c-input-wrap { flex: 1; display: flex; gap: 8px; }
+  .c-input { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 13px; color: var(--text); outline: none; font-family: inherit; }
+  .c-input:focus { border-color: var(--accent); }
+  .c-send { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 14px; }
+  .sb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .sb-hd { background: #F8F7F3; border-bottom: 1px solid var(--border); padding: 8px 14px; font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .sb-body { padding: 14px; }
+
+  .join-btn-sb {
+    display: block; width: 100%; padding: 12px; border-radius: 7px; border: none; cursor: pointer;
+    font-size: 14px; font-weight: 800; text-align: center; text-decoration: none;
+    background: var(--accent); color: #fff; transition: background 0.12s; margin-bottom: 8px;
+  }
+  .join-btn-sb:hover { background: #256644; }
+  .join-btn-sb.joined { background: var(--accent-light); color: var(--accent); border: 2px solid var(--accent-mid); cursor: default; }
+  .sb-note { font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.5; }
+
+  .kv { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .kv:last-child { border-bottom: none; }
+  .kv-k { color: var(--text-muted); }
+  .kv-v { font-weight: 700; color: var(--text); text-align: right; }
+
+  .organizer-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+  .org-avatar { width: 36px; height: 36px; border-radius: 50%; background: #E8E6DE; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--text-muted); flex-shrink: 0; }
+  .org-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .org-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .org-link { font-size: 11px; color: var(--accent); font-weight: 600; text-decoration: none; }
+
+  .pts-est { background: var(--accent-light); border: 1px solid #A7D7B8; border-radius: 6px; padding: 12px; text-align: center; }
+  .pts-num { font-size: 28px; font-weight: 900; color: var(--accent); line-height: 1; }
+  .pts-label { font-size: 11px; color: var(--accent); margin-top: 3px; font-weight: 600; }
+  .pts-note { font-size: 10px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+
+  .club-block { padding: 12px 14px; display: flex; gap: 10px; align-items: center; }
+  .club-icon { width: 36px; height: 36px; border-radius: 7px; background: var(--accent-light); border: 1px solid #A7D7B8; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .club-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .club-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .club-link { font-size: 11px; color: var(--accent); font-weight: 600; text-decoration: none; }
+
+  footer { border-top: 1px solid var(--border); padding: 20px; text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="landing.html" class="nav-logo">Padel<em>Z</em></a>
+  <div class="nav-search">
+    <span style="color:rgba(255,255,255,0.35);font-size:13px;">⌕</span>
+    <input type="text" placeholder="Search players, clubs, tournaments…">
+  </div>
+  <div class="nav-links">
+    <a href="landing.html" class="nav-link">Leaderboard</a>
+    <a href="matches.html" class="nav-link active">Matches</a>
+    <a href="#" class="nav-link">Clubs</a>
+    <a href="#" class="nav-link">Groups</a>
+    <a href="#" class="nav-link">Marketplace</a>
+  </div>
+  <div class="nav-spacer"></div>
+  <a href="#" class="nav-join">Join Free</a>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="breadcrumb">
+      <a href="matches.html">Match Finder</a>
+      <span>›</span>
+      <span>Open Games</span>
+      <span>›</span>
+      <span>Blue Tree Padel</span>
+    </div>
+    <div class="header-top">
+      <div class="header-left">
+        <div class="header-badges">
+          <span class="type-badge tb-game">Open Game</span>
+          <span class="tier tier-platinum">Platinum</span>
+          <span class="open-badge">3 spots open</span>
+        </div>
+        <div class="header-title">Americano — Blue Tree Padel</div>
+        <div class="header-meta">
+          <span class="hm-item">📅 <strong>Tonight, Tuesday 20 May</strong></span>
+          <span class="hm-sep">·</span>
+          <span class="hm-item">📍 <strong>Blue Tree Padel</strong>, Court 3</span>
+          <span class="hm-sep">·</span>
+          <span class="hm-item">Posted by <strong>David Okafor</strong></span>
+          <span class="hm-sep">·</span>
+          <span class="hm-item">~90 min</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="time-display">
+          <div class="time-big">19:00</div>
+          <div class="time-date">Tuesday 20 May 2025</div>
+          <div class="time-countdown">Starts in 1h 30m</div>
+        </div>
+        <button class="join-btn-header" id="main-join-btn" onclick="joinGame()">Join This Game</button>
+        <div class="spots-note" id="spots-note">3 of 6 spots filled · 3 open</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="page">
+  <div class="main">
+
+    <!-- PLAYER SLOTS -->
+    <div class="card">
+      <div class="card-hd">
+        <span>Players — 3 of 6 joined</span>
+        <span style="font-size:11px;font-weight:600;color:var(--accent);">Invite →</span>
+      </div>
+      <div class="card-body">
+        <div class="slots-grid">
+          <!-- Team A -->
+          <div class="team">
+            <div class="team-label">Team A</div>
+            <div class="slot-row you">
+              <div class="slot-av filled you">You</div>
+              <div class="slot-info">
+                <div class="slot-name-lg">James Fletcher</div>
+                <div class="slot-sub">
+                  <span class="tier tier-platinum">Platinum</span>
+                  <span>Blue Tree Padel</span>
+                </div>
+              </div>
+            </div>
+            <div class="slot-row filled">
+              <div class="slot-av filled">DO</div>
+              <div class="slot-info">
+                <div class="slot-name-lg">David Okafor</div>
+                <div class="slot-sub">
+                  <span class="tier tier-platinum">Platinum</span>
+                  <span>Destination Padel</span>
+                </div>
+              </div>
+            </div>
+            <div class="slot-row empty" onclick="joinSlot(this)">
+              <div class="slot-av empty">+</div>
+              <div class="slot-info">
+                <div class="slot-name-lg empty">Open spot</div>
+                <div class="slot-sub">Tap to join</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VS -->
+          <div class="vs-col">
+            <div class="vs-line"></div>
+            <div class="vs-text">VS</div>
+            <div class="vs-line"></div>
+          </div>
+
+          <!-- Team B -->
+          <div class="team">
+            <div class="team-label">Team B</div>
+            <div class="slot-row filled">
+              <div class="slot-av filled">CS</div>
+              <div class="slot-info">
+                <div class="slot-name-lg">Carlos Santos</div>
+                <div class="slot-sub">
+                  <span class="tier tier-diamond" style="background:var(--diamond-bg);color:var(--diamond);border:1px solid #BFDBFE;">Diamond</span>
+                  <span>Destination Padel</span>
+                </div>
+              </div>
+            </div>
+            <div class="slot-row empty" onclick="joinSlot(this)">
+              <div class="slot-av empty">+</div>
+              <div class="slot-info">
+                <div class="slot-name-lg empty">Open spot</div>
+                <div class="slot-sub">Tap to join</div>
+              </div>
+            </div>
+            <div class="slot-row empty" onclick="joinSlot(this)">
+              <div class="slot-av empty">+</div>
+              <div class="slot-info">
+                <div class="slot-name-lg empty">Open spot</div>
+                <div class="slot-sub">Tap to join</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;padding:10px 12px;background:#F8F7F3;border-radius:6px;border:1px solid var(--border);font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+          <span>ℹ️</span>
+          <span>Teams are randomly reassigned each round in Americano format — initial placement is for coordination only.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORGANIZER NOTE -->
+    <div class="card">
+      <div class="card-hd">Game Description</div>
+      <div class="notes-body">
+        <strong>Competitive Americano, rotating partners.</strong> Looking for 3 more players at Platinum or Diamond level. We'll do rotating 6-point games, full americano scoring. Court 3 is booked until 20:30.
+        <br><br>
+        Bring your own water — the kiosk near court 3 opens at 19:00. If you're running late, WhatsApp me directly (profile link below) so we can start on time.
+        <br><br>
+        Results will be submitted to Padel Z after the session — all points count toward the season leaderboard.
+      </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="card">
+      <div class="card-hd">Discussion</div>
+      <div class="comment-list">
+        <div class="comment-row">
+          <div class="c-avatar">DO</div>
+          <div class="c-body">
+            <div class="c-header">
+              <span class="c-name">David Okafor</span>
+              <span class="c-time">2h ago</span>
+            </div>
+            <div class="c-text">Posted this game — looking for 3 more. All levels Platinum and above welcome. We play competitive but friendly.</div>
+          </div>
+        </div>
+        <div class="comment-row">
+          <div class="c-avatar">CS</div>
+          <div class="c-body">
+            <div class="c-header">
+              <span class="c-name">Carlos Santos</span>
+              <span class="c-time">1h ago</span>
+            </div>
+            <div class="c-text">I'm in. Can confirm court 3 has good lighting for evening play — used it last week.</div>
+          </div>
+        </div>
+        <div class="comment-row">
+          <div class="c-avatar" style="background:var(--accent-light);color:var(--accent);">You</div>
+          <div class="c-body">
+            <div class="c-header">
+              <span class="c-name">James Fletcher</span>
+              <span class="c-time">45m ago</span>
+            </div>
+            <div class="c-text">Joined. Will be there by 18:50 to warm up.</div>
+          </div>
+        </div>
+        <div class="comment-row">
+          <div class="c-avatar">AL</div>
+          <div class="c-body">
+            <div class="c-header">
+              <span class="c-name">Anna Lindqvist</span>
+              <span class="c-time">30m ago</span>
+            </div>
+            <div class="c-text">Is this open to Gold tier? I'm borderline Platinum and play up regularly.</div>
+          </div>
+        </div>
+        <div class="comment-row">
+          <div class="c-avatar">DO</div>
+          <div class="c-body">
+            <div class="c-header">
+              <span class="c-name">David Okafor</span>
+              <span class="c-time">25m ago</span>
+            </div>
+            <div class="c-text">@Anna yes, strong Gold is absolutely fine. Jump in!</div>
+          </div>
+        </div>
+      </div>
+      <div class="comment-input-row">
+        <div class="c-input-avatar">JF</div>
+        <div class="c-input-wrap">
+          <input class="c-input" type="text" placeholder="Add a comment…">
+          <button class="c-send">Post</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- JOIN CTA -->
+    <div class="sb-card">
+      <div class="sb-hd">Join This Game</div>
+      <div class="sb-body">
+        <div class="pts-est" style="margin-bottom:12px;">
+          <div class="pts-num">~85–180</div>
+          <div class="pts-label">Estimated Points</div>
+          <div class="pts-note">Based on a Platinum win vs Diamond opponents. Losses always earn participation points.</div>
+        </div>
+        <button class="join-btn-sb joined" id="sb-join-btn">Joined ✓</button>
+        <div class="sb-note">3 spots still open — share this game to fill it faster</div>
+        <div style="margin-top:10px;text-align:center;">
+          <a href="#" style="font-size:12px;color:var(--text-muted);text-decoration:none;">Leave game</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME DETAILS -->
+    <div class="sb-card">
+      <div class="sb-hd">Game Details</div>
+      <div class="sb-body">
+        <div class="kv"><span class="kv-k">Format</span><span class="kv-v">Americano</span></div>
+        <div class="kv"><span class="kv-k">Tier</span><span class="kv-v"><span class="tier tier-platinum">Platinum</span></span></div>
+        <div class="kv"><span class="kv-k">Date</span><span class="kv-v">Tue 20 May 2025</span></div>
+        <div class="kv"><span class="kv-k">Start time</span><span class="kv-v">19:00</span></div>
+        <div class="kv"><span class="kv-k">Duration</span><span class="kv-v">~90 min</span></div>
+        <div class="kv"><span class="kv-k">Court</span><span class="kv-v">Court 3</span></div>
+        <div class="kv"><span class="kv-k">Players</span><span class="kv-v">3 / 6 joined</span></div>
+        <div class="kv"><span class="kv-k">Scoring</span><span class="kv-v">Casual (−15%)</span></div>
+      </div>
+    </div>
+
+    <!-- ORGANIZER -->
+    <div class="sb-card">
+      <div class="sb-hd">Organizer</div>
+      <div class="organizer-row">
+        <div class="org-avatar">DO</div>
+        <div style="flex:1;">
+          <div class="org-name">David Okafor</div>
+          <div class="org-sub"><span class="tier tier-platinum">Platinum</span> · Destination Padel</div>
+        </div>
+        <a href="profile.html" class="org-link">Profile →</a>
+      </div>
+    </div>
+
+    <!-- CLUB -->
+    <div class="sb-card">
+      <div class="sb-hd">Venue</div>
+      <div class="club-block">
+        <div class="club-icon">🔵</div>
+        <div>
+          <div class="club-name">Blue Tree Padel</div>
+          <div class="club-meta">Thalang · 4 courts · Open until 22:00</div>
+          <a href="#" class="club-link">Club page →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- POINTS BREAKDOWN -->
+    <div class="sb-card">
+      <div class="sb-hd">Points This Match</div>
+      <div class="sb-body">
+        <div class="score-preview">
+          <div class="sp-row"><span class="sp-label">Base (Americano)</span><span class="sp-val">Standard</span></div>
+          <div class="sp-row"><span class="sp-label">Format modifier</span><span class="sp-val green">+15%</span></div>
+          <div class="sp-row"><span class="sp-label">Type modifier (casual)</span><span class="sp-val" style="color:var(--text-muted);">−15%</span></div>
+          <div class="sp-row"><span class="sp-label">Tier multiplier (vs Diamond win)</span><span class="sp-val green">×1.5</span></div>
+          <div class="sp-row"><span class="sp-label">Loss (participation)</span><span class="sp-val green">+25 flat</span></div>
+        </div>
+        <div class="sp-total" style="margin-top:10px;">
+          <span class="sp-total-label">Win estimate</span>
+          <span class="sp-total-val">~142–180 pts</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>© 2025 Padel Z · Phuket Padel Community · Free for players and clubs</footer>
+
+<script>
+  let joined = true; // pre-joined for demo
+
+  function joinGame() {
+    if (joined) return;
+    joined = true;
+    document.getElementById('main-join-btn').className = 'join-btn-header joined';
+    document.getElementById('main-join-btn').textContent = 'Joined ✓';
+    document.getElementById('sb-join-btn').className = 'join-btn-sb joined';
+    document.getElementById('sb-join-btn').textContent = 'Joined ✓';
+  }
+
+  function joinSlot(row) {
+    if (joined) return;
+    row.classList.remove('empty');
+    row.classList.add('you');
+    const av = row.querySelector('.slot-av');
+    av.className = 'slot-av filled you';
+    av.textContent = 'You';
+    const nameEl = row.querySelector('.slot-name-lg');
+    nameEl.className = 'slot-name-lg';
+    nameEl.textContent = 'James Fletcher';
+    const subEl = row.querySelector('.slot-sub');
+    subEl.innerHTML = '<span class="tier tier-platinum">Platinum</span><span>Blue Tree Padel</span>';
+    joinGame();
+  }
+</script>
+</body>
+</html>

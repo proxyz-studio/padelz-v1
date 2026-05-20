@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Padel-Z v2 — Clickable Preview</title>
+<style>
+  :root {
+    --nav-bg: #1C2333;
+    --bg: #F4F3EF;
+    --bg-card: #FFFFFF;
+    --accent: #2E7D52;
+    --accent-mid: #4A9E6B;
+    --text: #1A1A1A;
+    --text-mid: #4A4A4A;
+    --text-muted: #888888;
+    --border: #E2E0D8;
+    --border-dark: #C8C5BB;
+    --amber-bg: #FFFBEB;
+    --amber: #B45309;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    line-height: 1.5; font-size: 14px;
+  }
+
+  nav {
+    background: var(--nav-bg); height: 52px;
+    display: flex; align-items: center; padding: 0 20px; gap: 16px;
+  }
+  .nav-logo { color: #fff; font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+  .nav-logo em { color: var(--accent-mid); font-style: normal; }
+  .nav-tag {
+    background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .banner {
+    background: var(--amber-bg); border-bottom: 1px solid var(--border);
+    padding: 10px 20px; text-align: center; font-size: 12px; color: var(--amber);
+  }
+  .banner strong { font-weight: 700; }
+
+  .page-header { padding: 32px 20px 20px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
+  .page-header-inner { max-width: 1000px; margin: 0 auto; }
+  .page-title { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; }
+  .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .section-label {
+    font-size: 10px; font-weight: 800; color: var(--text-muted);
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 18px; text-decoration: none; color: var(--text);
+    transition: border-color 0.12s, transform 0.12s;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-1px); }
+
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .card-name { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
+  .card-num { font-size: 11px; color: var(--text-muted); font-weight: 700; }
+  .card-desc { font-size: 12px; color: var(--text-mid); line-height: 1.55; }
+  .card-href { font-size: 11px; color: var(--accent); font-weight: 700; margin-top: 4px; }
+
+  .meta-section { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .meta-row { display: flex; gap: 8px; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .meta-row strong { color: var(--text-mid); font-weight: 700; min-width: 90px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">Padel<em>-Z</em></span>
+  <span class="nav-tag">v2 Preview</span>
+</nav>
+
+<div class="banner">
+  <strong>Preview sandbox.</strong> Static mockups for v2 review with Tim. Not the live product. Branding is placeholder and will be relayered after structural sign-off.
+</div>
+
+<header class="page-header">
+  <div class="page-header-inner">
+    <h1 class="page-title">v2 Clickable Mockups</h1>
+    <p class="page-subtitle">
+      Six pages Tim produced for the 2026-05-20 alignment meeting. Click any card to open the mockup. Cross-page navigation between mockups is partial, so use the back button or this index to move between them.
+    </p>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="section-label">User-facing pages</div>
+  <div class="grid">
+
+    <a class="card" href="landing.html">
+      <div class="card-head">
+        <span class="card-name">Landing</span>
+        <span class="card-num">01</span>
+      </div>
+      <p class="card-desc">Homepage. Live feed of match results, point system, upcoming tournaments. Proposed addition: starred-groups module surfacing messages and open games from your groups.</p>
+      <span class="card-href">landing.html →</span>
+    </a>
+
+    <a class="card" href="matches.html">
+      <div class="card-head">
+        <span class="card-name">Matches</span>
+        <span class="card-num">02</span>
+      </div>
+      <p class="card-desc">Unified calendar of open games and club tournaments in one chronological feed. Multi-day externals like TPS and PPS get dedicated detail pages.</p>
+      <span class="card-href">matches.html →</span>
+    </a>
+
+    <a class="card" href="profile.html">
+      <div class="card-head">
+        <span class="card-name">Profile</span>
+        <span class="card-num">03</span>
+      </div>
+      <p class="card-desc">Player profile: tier, home clubs, verified external rating badge, match history, tournament results, current standings.</p>
+      <span class="card-href">profile.html →</span>
+    </a>
+
+    <a class="card" href="game-detail.html">
+      <div class="card-head">
+        <span class="card-name">Game detail</span>
+        <span class="card-num">04</span>
+      </div>
+      <p class="card-desc">Single open match view. Score submission, 4-player confirmation flow, partner switching between rounds.</p>
+      <span class="card-href">game-detail.html →</span>
+    </a>
+
+    <a class="card" href="tournament-detail.html">
+      <div class="card-head">
+        <span class="card-name">Tournament detail</span>
+        <span class="card-num">05</span>
+      </div>
+      <p class="card-desc">Tournament detail page. Bracket, registration, results. Major events host multiple simultaneous brackets per tier and gender.</p>
+      <span class="card-href">tournament-detail.html →</span>
+    </a>
+
+  </div>
+
+  <div class="section-label" style="margin-top: 28px;">Planning artifact</div>
+  <div class="grid">
+    <a class="card" href="sitemap.html">
+      <div class="card-head">
+        <span class="card-name">Sitemap</span>
+        <span class="card-num">06</span>
+      </div>
+      <p class="card-desc">Full site map across all five categories: leaderboard, matches, clubs, groups, marketplace. Internal planning artifact, not a user-facing page.</p>
+      <span class="card-href">sitemap.html →</span>
+    </a>
+  </div>
+
+  <section class="meta-section">
+    <div class="section-label">Meta</div>
+    <div class="meta-row"><strong>Source</strong> Tim's mockup set, Drive folder dated 2026-05-19 to 2026-05-20</div>
+    <div class="meta-row"><strong>Decision</strong> 2026-05-20 16:02 meeting: development deferred until clickable mockups finalized</div>
+    <div class="meta-row"><strong>Next</strong> Tew and Tim click through, mark gaps, iterate. No code build until reviewed.</div>
+  </section>
+
+</main>
+
+</body>
+</html>
