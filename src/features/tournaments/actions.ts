@@ -644,6 +644,16 @@ export async function generateBracket(
     };
   }
 
+  if (t.status !== 'open') {
+    return {
+      success: false,
+      error: {
+        code: 'INVALID_STATUS',
+        message: 'Tournament must be open to generate bracket',
+      },
+    };
+  }
+
   // Load registered players (registered status only)
   const regRows = await db
     .select({ player_id: registrations.player_id })
@@ -706,6 +716,11 @@ export async function generateBracket(
         })),
       );
     }
+
+    await tx
+      .update(tournaments)
+      .set({ status: 'in_progress' })
+      .where(eq(tournaments.id, t.id));
 
     return [b];
   });

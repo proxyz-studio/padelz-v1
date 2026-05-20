@@ -15,6 +15,7 @@ import {
 import {
   createTournament,
   generateBracket,
+  publishTournament,
 } from '@/features/tournaments/actions';
 
 // ── Fixture helpers ───────────────────────────────────────────────────────────
@@ -93,6 +94,8 @@ describe('generateBracket Server Action', () => {
   it('americano: inserts bracket row + matches atomically for 4 players', async () => {
     const { clerkId, clubId } = await makeClubAdmin(uuidv7().replace(/-/g, '').slice(0, 12));
     const tId = await makeTournament(clubId, clerkId, 'americano');
+    const pub = await publishTournament({ tournament_id: tId }, clerkId);
+    expect(pub.success).toBe(true);
     const pIds = await makePlayers(4);
     await registerPlayers(tId, pIds);
 
@@ -126,6 +129,8 @@ describe('generateBracket Server Action', () => {
   it('round_robin: inserts 6 matches for 4 players', async () => {
     const { clerkId, clubId } = await makeClubAdmin(uuidv7().replace(/-/g, '').slice(0, 12));
     const tId = await makeTournament(clubId, clerkId, 'round_robin');
+    const pub = await publishTournament({ tournament_id: tId }, clerkId);
+    expect(pub.success).toBe(true);
     const pIds = await makePlayers(4);
     await registerPlayers(tId, pIds);
 
@@ -144,6 +149,8 @@ describe('generateBracket Server Action', () => {
   it('bracket: inserts 3 matches for 4 players (single-elim)', async () => {
     const { clerkId, clubId } = await makeClubAdmin(uuidv7().replace(/-/g, '').slice(0, 12));
     const tId = await makeTournament(clubId, clerkId, 'bracket');
+    const pub = await publishTournament({ tournament_id: tId }, clerkId);
+    expect(pub.success).toBe(true);
     const pIds = await makePlayers(4);
     await registerPlayers(tId, pIds);
 
@@ -162,6 +169,8 @@ describe('generateBracket Server Action', () => {
   it('mexicano: inserts 1 initial round (1 match) for 4 players', async () => {
     const { clerkId, clubId } = await makeClubAdmin(uuidv7().replace(/-/g, '').slice(0, 12));
     const tId = await makeTournament(clubId, clerkId, 'mexicano');
+    const pub = await publishTournament({ tournament_id: tId }, clerkId);
+    expect(pub.success).toBe(true);
     const pIds = await makePlayers(4);
     await registerPlayers(tId, pIds);
 
@@ -207,6 +216,8 @@ describe('generateBracket Server Action', () => {
   it('idempotent guard — second call returns ALREADY_GENERATED', async () => {
     const { clerkId, clubId } = await makeClubAdmin(uuidv7().replace(/-/g, '').slice(0, 12));
     const tId = await makeTournament(clubId, clerkId, 'americano');
+    const pub = await publishTournament({ tournament_id: tId }, clerkId);
+    expect(pub.success).toBe(true);
     const pIds = await makePlayers(4);
     await registerPlayers(tId, pIds);
 
@@ -216,5 +227,47 @@ describe('generateBracket Server Action', () => {
     const second = await generateBracket({ tournament_id: tId }, clerkId);
     expect(second.success).toBe(false);
     if (!second.success) expect(second.error.code).toBe('ALREADY_GENERATED');
+  });
+});
+
+describe('generateBracket status guards', () => {
+  it('returns INVALID_STATUS when tournament is in draft', async () => {
+    const { clerkId, clubId } = await makeClubAdmin(uuidv7().slice(0, 8));
+    const tournamentId = await makeTournament(clubId, clerkId, 'round_robin');
+    const playerIds = await makePlayers(4);
+    for (const pid of playerIds) {
+      await db.insert(registrations).values({
+        tournament_id: tournamentId,
+        player_id: pid,
+        status: 'registered',
+      });
+    }
+    const r = await generateBracket({ tournament_id: tournamentId }, clerkId);
+    expect(r.success).toBe(false);
+    if (r.success) return;
+    expect(r.error.code).toBe('INVALID_STATUS');
+  });
+
+  it('flips status from open to in_progress on successful generate', async () => {
+    const { clerkId, clubId } = await makeClubAdmin(uuidv7().slice(0, 8));
+    const tournamentId = await makeTournament(clubId, clerkId, 'round_robin');
+    const pub = await publishTournament({ tournament_id: tournamentId }, clerkId);
+    expect(pub.success).toBe(true);
+    const playerIds = await makePlayers(4);
+    for (const pid of playerIds) {
+      await db.insert(registrations).values({
+        tournament_id: tournamentId,
+        player_id: pid,
+        status: 'registered',
+      });
+    }
+    const r = await generateBracket({ tournament_id: tournamentId }, clerkId);
+    expect(r.success).toBe(true);
+    const [t] = await db.select().from(tournaments).where(eq(tournaments.id, tournamentId));
+    expect(t.status).toBe('in_progress');
+    const [br] = await db.select().from(brackets).where(eq(brackets.tournament_id, tournamentId));
+    expect(br).toBeDefined();
+    const ms = await db.select().from(matches).where(eq(matches.tournament_id, tournamentId));
+    expect(ms.length).toBeGreaterThan(0);
   });
 });
